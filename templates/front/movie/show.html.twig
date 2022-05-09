@@ -1,0 +1,145 @@
+{% extends "base.html.twig" %}
+
+{% block title %}O'flix - {{ movie.title }}{% endblock %}
+
+{% block body %}
+<!-- main -->
+
+    <div class="container bg-lighttt pt-5">
+
+        <div class="row mb-2">
+
+            <div class="col">
+
+                <div
+                    class="row g-0 borderrr rrrounded overflow-hidden flex-md-row align-items-start mb-4 shadow-smmm position-relative">
+                    <div class="col-4 movie__poster img-thumbnail"
+                        style="background-image: url({{ movie.poster }});">
+                        <img src="{{ asset('assets/images/poster-placeholder.png') }}" class="img-fluid">
+                        <!-- img src="https://m.media-amazon.com/images/M/MV5BNThmZGY4NzgtMTM4OC00NzNkLWEwNmEtMjdhMGY5YTc1NDE4XkEyXkFqcGdeQXVyMTQxNzMzNDI@._V1_SX300.jpg" class="img-fluid" -->
+                    </div>
+
+                    <div class="col-8 p-4 d-flex flex-column position-static bg-light">
+                        <a href="" class="movie__favorite fs-1 my-2 mx-3 link-danger"><i class="bi bi-bookmark-plus"></i></a>
+                        <strong class="d-inline-block mb-2 text-primary">{{ movie.type }}</strong>
+                        <h3 class="mb-1">{{ movie.title }}</h3>
+                        <div class="mb-1 text-muted">{{ movie.duration }} min</div>
+                        <p>
+                            {% for genre in movie.genres %}
+                                <span class="badge bg-warning text-dark">{{ genre.name }}</span>
+                            {% endfor %}
+                        </p>
+                        <p>{{ movie.summary }}</p>
+                        <div class="d-flex" style="color: orange;">
+                        {% for i in range(0, 4) %}
+                            {% set starClass = movie.rating - i >= 1 ? '-fill' : (movie.rating - i >= 0.5 ? '-half' : '') %}
+                            <span class="bi bi-star{{ starClass }}"></span>
+                        {% endfor %}
+                            <span class="ps-1">{{ movie.rating }}</span>
+                        </div>
+
+                        <h2>{{ movie.seasons|length }} Saisons</h2>
+                        <ul class="list-unstyled">
+                            {% for season in movie.seasons %}
+                                <li><span class="badge bg-danger fs-6 mb-2">Saison {{ season.number }}</span> <small class="ms-1">({{ season.episodesNumber }} épisodes)</small></li>
+                            {% endfor %}
+                            
+                        </ul>
+
+                        <dl class="row">
+                            <dt class="col-sm-12">Avec</dt>
+                            <dd class="col-sm-12">
+                                {# version en utilisant les relations et le lazy, mais sans tri #}
+                                {% for casting in movie.castings %}
+                                    {{ casting.actor.firstname }} {{ casting.actor.lastname }} ({{ casting.role }}) (creditOrder : {{casting.creditOrder}})<br>
+                                {% else %}
+                                    <em>pas d'acteurs</em><br>
+                                {% endfor %} 
+                            </dd>
+                            <dt class="col-sm-12">Avec (depuis controller)</dt>
+                            <dd class="col-sm-12">
+                                {# version en utilisant les castings récuperé à la main dans le controller avec le tri #}
+                                {% for casting in castingsFilterByMovie %}
+                                    {{ casting.actor.firstname }} {{ casting.actor.lastname }} ({{ casting.role }}) (creditOrder : {{casting.creditOrder}})<br>
+                                {% else %}
+                                    <em>pas d'acteurs</em><br>
+                                {% endfor %} 
+                            </dd>
+                            <dt class="col-sm-12">Avec (sort dans twig)</dt>
+                            <dd class="col-sm-12">
+                                {# version en utilisant les relations et le lazy, mais sans tri #}
+                                {# https://twig.symfony.com/doc/2.x/filters/sort.html #}
+                                {#
+                                    sort((param1, param2) => param1.creditOrder <=> param2.creditOrder )
+                                    
+                                    sort() ==> je demande à twig de trier le tableau avant de faire la boucle for
+                                    
+                                    il existe plusieurs algorithme pour trier des données
+                                    le plus simple est de comparer les valeurs les unes entre les autres
+                                    et de décider à chaque fois l'ordre de tri entre ces deux valeurs
+                                    l'algo va parcourir toute la liste et faire le tri
+                                    Pour cela on doit lui donner le système de comparaison
+                                    comme on a dit que l'on compare entre deux élements, on va lui donner
+                                    une function avec 2 paramètres
+                                        sort((param1, param2))
+                                    on va aussi implémenter cette fonction pour définir la comparaison
+                                        => param1.laPropriétéAComparer et param2.laPropriétéAComparer
+                                    
+                                        sort((param1, param2) => param1.laPropriétéAComparer <=> param2.laPropriétéAComparer )
+
+                                    pour faire des économies visuelle, on va utiliser plutot (a, b) pour les paramètres de la function
+                                    
+                                    cette function de tri sera éxecuté par twig au démarrage de la boucle,
+                                    on a donc pas accès à a ou b
+                                    la fonction de tri est un fonctionnement interne de twig
+                                #}
+                                {% for casting in movie.castings|sort((a,b) => a.creditOrder <=> b.creditOrder) %}
+                                    {{ casting.actor.firstname }} {{ casting.actor.lastname }} ({{ casting.role }}) (creditOrder : {{casting.creditOrder}})<br>
+                                {% else %}
+                                    <em>pas d'acteurs</em><br>
+                                {% endfor %} 
+                            </dd>
+                            <dt class="col-sm-12">Pays</dt>
+                            <dd class="col-sm-12">USA</dd>
+                            <dt class="col-sm-12">Année</dt>
+                            {# https://twig.symfony.com/doc/2.x/filters/date.html #}
+                            <dd class="col-sm-12">{{movie.releaseDate|date("d/m/Y")}}</dd>
+                        </dl>
+
+                    </div>
+                </div>
+
+            </div>
+            {% for lastReview in lastReviews %}
+            <div class="row">
+                <div class="card" style="width: 18rem;">
+                    <div class="card-body">
+                      <h5 class="card-title">Dernière Critique :</h5>
+                      {% if lastReview.rating > 0 %}
+                            <div class="d-flex" style="color: orange;">
+                                {% set k = lastReview.rating %}
+                                {% for i in range(1, lastReview.rating|round(0, 'floor')) %}
+                                    <i class="bi bi-star-fill"></i>
+                                    {% set k = k-1 %}
+                                {% endfor %}
+                                {% if k > 0 %}
+                                <i class="bi bi-star-half"></i>
+                                {% endif %}
+                                <span class="ps-1">{{ lastReview.rating }}</span>
+                            </div>
+                        {% endif %}
+                      <h6 class="card-subtitle mb-2 text-muted">de {{ lastReview.username }} vu le {{ lastReview.watchedAt|date('d/m/y') }}</h6>
+                      <p class="card-text">{{ lastReview.content }}</p>
+                    </div>
+                  </div>
+            </div>
+            {% else %}
+                <div><em>pas de review</em></div>
+            {% endfor %}
+            <p><a class="btn btn-sm btn-warning" href="{{ path('movie_review_add', {id: movie.id}) }}">Ajouter une critique</a></p>
+
+        </div>
+
+    </div>
+    {# dump(movie) #}
+{% endblock %}

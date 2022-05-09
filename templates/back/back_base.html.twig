@@ -1,0 +1,24 @@
+{% extends 'base.html.twig' %}
+
+{# 
+    je veux afficher une barre d'admin
+    je définit dans le parent la zone d'admin_nav
+    et j'écrit depuis ici
+#}
+{% block admin_nav %}
+<h1>{% block title_admin%}{% endblock %}</h1>
+<ul class="nav bg-light mb-3">
+    <li class="nav-item">
+        <a class="nav-link" href="{{ path('back_movie_index') }}">Films et séries</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ path('back_user_index') }}">Users</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="#">Genres</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="#">Personnes</a>
+    </li>
+</ul>
+{% endblock %}

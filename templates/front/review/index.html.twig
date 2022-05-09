@@ -1,0 +1,28 @@
+{% extends "base.html.twig" %}
+
+{% block title %}Ajouter une critique{% endblock %}
+
+{% block body %}
+
+<div class="container pt-5">
+
+    <div class="row mb-2">
+
+        <div class="col">
+
+            <h1>Ajouter une critique</h1>
+            <h2>{{ movie.title }}</h2>
+            {#
+            https://symfony.com/doc/5.4/form/form_customization.html    
+            #}
+            {{ form_start(formulaire, {attr: {novalidate: 'novalidate'}} ) }}
+                {{ form_widget(formulaire) }}
+                {# https://symfony.com/doc/current/best_practices.html#add-form-buttons-in-templates #}
+                <button class="btn btn-success" type="submit">Ajouter</button>
+            {{ form_end(formulaire)}}
+
+        </div>
+    </div>
+</div>
+
+{% endblock %} 

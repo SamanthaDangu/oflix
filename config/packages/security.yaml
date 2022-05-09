@@ -1,0 +1,98 @@
+security:
+    enable_authenticator_manager: true
+    # https://symfony.com/doc/current/security.html#registering-the-user-hashing-passwords
+    password_hashers:
+        Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
+        App\Entity\User:
+            algorithm: auto
+
+    # https://symfony.com/doc/current/security.html#loading-the-user-the-user-provider
+    providers:
+        # used to reload user from session & other features (e.g. switch_user)
+        app_user_provider:
+            entity:
+                class: App\Entity\User
+                property: email
+    firewalls:
+        # A METTRE AVANT MAIN, sinon pas prit en compte
+        login:
+            pattern: ^/api/login
+            stateless: true
+            json_login:
+                check_path: /api/login_check
+                success_handler: lexik_jwt_authentication.handler.authentication_success
+                failure_handler: lexik_jwt_authentication.handler.authentication_failure
+        
+        # partie secure de l'API
+        api_secure:
+           pattern:   ^/api/secure
+           stateless: true
+           jwt: ~
+        
+        # partie publique de l'API
+        api_public:
+           pattern:   ^/api
+           stateless: true
+        #   jwt: ~
+
+        dev:
+            pattern: ^/(_(profiler|wdt)|css|images|js)/
+            security: false
+        main:
+            lazy: true
+            provider: app_user_provider
+            custom_authenticator: App\Security\LoginFormAuthenticator
+            logout:
+                path: app_logout
+                # where to redirect after logout
+                # target: app_any_route
+
+            # activate different ways to authenticate
+            # https://symfony.com/doc/current/security.html#the-firewall
+
+            # https://symfony.com/doc/current/security/impersonating_user.html
+            # switch_user: true
+
+    # Easy way to control access for large sections of your site
+    # Note: Only the *first* access control that matches will be used
+    # Front : Si user ANONYME : page d'accueil + fiche film seulement.
+    #   Front : Si ROLE_USER : ajouter une critique sur un film.
+    #   Admin : Si ROLE_MANAGER : accès aux pages de listes movie, genres etc. et pages show (si existantes).
+    # Admin : Sécuriser toutes les routes /add /edit /delete avec ROLE_ADMIN.
+    access_control:
+        # ^ début de l'url
+        # /back pour limiter au backoffice
+        # [^/] tout ce qui n'est pas un / (=> le nom du modèle peut importe le model)
+        # + 1 ou plusieurs fois le caractère précédente
+        # / le slash
+        # \d+ un nombre
+        # $ fin de l'url
+        - { path: ^/back/([^/]+)/\d+$, roles: ROLE_ADMIN, methods: [POST] } # route de delete de n'importe quel modèle
+        - { path: ^/back/[^/]+/\d+/edit$, roles: ROLE_MANAGER } # route de delete de n'importe quel modèle
+        # - { path: ^/back/[^/]+/new$, roles: ROLE_ADMIN } # routes add de n'importe quel modèle
+        - { path: ^/back/[^/]+/\d+$, roles: ROLE_MANAGER, methods: [GET] } # route de show de n'importe quel modèle
+        - { path: ^/back/[^/]+/$, roles: ROLE_MANAGER } # route de liste de n'importe quel modèle
+        - { path: ^/movie/\d+/review, roles: ROLE_USER }
+        - { path: ^/back/, roles: ROLE_MANAGER }
+        # - { path: ^/profile, roles: ROLE_USER }
+        # ACL pour notre API
+        - { path: ^/api/login, roles: PUBLIC_ACCESS }
+        - { path: ^/api, roles: PUBLIC_ACCESS }
+        - { path: ^/api/secure,       roles: IS_AUTHENTICATED_FULLY }
+    
+    role_hierarchy:
+        ROLE_ADMIN:   ROLE_MANAGER
+        ROLE_MANAGER: ROLE_USER
+
+when@test:
+    security:
+        password_hashers:
+            # By default, password hashers are resource intensive and take time. This is
+            # important to generate secure password hashes. In tests however, secure hashes
+            # are not important, waste resources and increase test times. The following
+            # reduces the work factor to the lowest possible values.
+            Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface:
+                algorithm: auto
+                cost: 4 # Lowest possible value for bcrypt
+                time_cost: 3 # Lowest possible value for argon
+                memory_cost: 10 # Lowest possible value for argon

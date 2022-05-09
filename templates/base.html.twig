@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="fr">
+
+    <head>
+        <!-- Required meta tags -->
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <!-- Bootstrap CSS -->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet"
+            integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU" crossorigin="anonymous">
+        <!-- Bootstrap icons -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">
+
+        <!-- Our custom CSS -->
+        <link rel="stylesheet" href="{{ asset('assets/css/oflix.css') }}">
+        <!-- favicon -->
+        
+        {# https://symfony.com/doc/current/templates.html#linking-to-css-javascript-and-image-assets #}
+        {# the image lives at "public/images/logo.png" #}
+        {# <img src="{{ asset('images/logo.png') }}" alt="Symfony!"/> #}
+        <link rel="shortcut icon" href="{{ asset('assets/favicon.png') }}" type="image/x-icon">
+
+        <title>{% block title %}Bienvenue sur O'flix{% endblock %}</title>
+        {# Run `composer require symfony/webpack-encore-bundle` to start using Symfony UX #}
+        
+    </head>
+    <body>
+        <!-- Nav -->
+    {% if app.session.get('theme', 'netflix') == 'netflix' %}
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    {% else %}
+        <nav class="navbar navbar-expand-lg navbar-light bg-warning">
+    {% endif %}
+        <div class="container-fluid">
+            <a href="{{ path('movie_home') }}" class="d-flex align-items-center mb-2 mb-lg-0 text-white text-decoration-none header-logo">
+                <img src="{{ asset('assets/favicon.png') }}" height="24" alt="Logo O'flix">
+                <span class="header-logo__title">O'flix</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarSupportedContent">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ path('movie_home') }}">Accueil</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ path('movies') }}"><i class="bi bi-film"></i> Films, séries TV</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ path('main_favorites') }}"><i class="bi bi-bookmark"></i> Ma liste</a>
+                    </li>
+                </ul>
+                {% if app.user != null %}
+                    <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                                data-bs-toggle="dropdown">
+                                <span>{{ app.user.email }} ( {{ app.user.displayRole }} ) </span>
+                                <i class="bi bi-person-square"></i>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#">Profil</a></li>
+                                <li><a class="dropdown-item" href="{{ path('back_movie_index') }}">Backoffice</a></li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
+                                <li><a class="dropdown-item" href="{{ path('app_logout')}}">Déconnexion</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                {% else %}
+                    <a href="{{ path('app_login')}}" type="button" class="btn btn-danger me-2">Connexion</a>
+                {% endif %}
+
+                
+
+                <form class="d-flex" action="list.html">
+                    <input class="form-control form-control-sm me-2" name="search" type="search" placeholder="Rechercher...">
+                    <button class="btn btn-outline-danger" type="submit"><i class="bi bi-search"></i></button>
+                </form>
+            </div>
+        </div>
+    </nav>
+    <div id="broadcast_message"></div>
+        {% block admin_nav %}{% endblock %}
+        {% block body %}{% endblock %}
+    {% if randomMovie is defined %}
+        <div class="text-center border-top pt-3">
+            <p>Un film au hasard : <a href="{{ path('movie', {slug: randomMovie.slug}) }}">{{ randomMovie.title }}</a></p>
+        </div>
+    {% endif %}
+    <!-- footer -->
+    <footer class="container-fluid py-4 border-top text-center">
+        <span class="text-muted">O'flix made with &hearts; at O'clock !
+            {# Version Alexandre
+                <br><small>Thème :<a href="{{ path('main_theme_switcher') }}" class="link-secondary text-decoration-none"><i class="bi bi-toggle-on mx-1"></i>{{ app.session.get('theme') }}</a></small>
+            #}
+            <br><small>Thème :
+                <a href="{{ path('main_theme_switcher')}}" class="link-secondary text-decoration-none">
+                    {# Attention avec la session, bien vérifier ce qui se passe la première fois qu'on arrive sur le site #}
+                    {% if app.session.get('theme', 'netflix') == 'netflix' %}
+                    Allociné <i class="bi bi-toggle-on mx-1"></i> Netflix
+                    {% else %}
+                    Allociné <i class="bi bi-toggle-off mx-1"></i> Netflix
+                    {% endif %}    
+                </a>
+            </small>
+        </span>
+    </footer>
+
+    <!-- Optional JavaScript; choose one of 
+        the two! -->
+
+    <!-- Option 1: Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-/bQdsTh/da6pkI1MST/rWKFNjaCP5gBSY4sEBT38Q/9RBh9AH40zEOg7Hlq2THRZ"
+        crossorigin="anonymous"></script>
+
+    <!-- Option 2: Separate Popper and Bootstrap JS -->
+    <!--
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js" integrity="sha384-W8fXfP3gkOKtndU4JGtKDvXbO53Wy8SZCQHczT5FMiiqmQfUpWbYdTil/SxwZgAN" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/js/bootstrap.min.js" integrity="sha384-skAcpIdS7UcVUC05LJ9Dxay8AXcDYfBJqt1CJ85S/CFujBsIzCIv+l9liuYLaMQ/" crossorigin="anonymous"></script>
+    -->
+</body>
+</html>

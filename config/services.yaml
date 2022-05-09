@@ -1,0 +1,66 @@
+# This file is the entry point to configure your own services.
+# Files in the packages/ subdirectory configure your dependencies.
+
+# Put parameters here that don't need to change on each machine where the app is deployed
+# https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
+parameters:
+    app.slugger_to_lower: false
+    app.omdb_api_key: '%env(OMDB_API_KEY)%'
+    # si je ne précise pas que ce paramètre est une valeur boolean, il me donne du texte
+    # et PHP dira le texte en bool, c'est true /!\
+    app.is_maintenance: '%env(bool:IS_MAINTENANCE)%'
+
+services:
+    # default configuration for services in *this* file
+    _defaults:
+        autowire: true      # Automatically injects dependencies in your services.
+        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+
+    # makes classes in src/ available to be used as services
+    # this creates a service per class whose id is the fully-qualified class name
+    App\:
+        resource: '../src/'
+        exclude:
+            - '../src/DependencyInjection/'
+            - '../src/Entity/'
+            - '../src/Kernel.php'
+            - '../src/Tests/'
+
+    # add more service definitions when explicit configuration is needed
+    # please note that last definitions always *replace* previous ones
+
+    # argument pour le service de slug
+    App\Service\MySlugger:
+        arguments:
+            $toLower: '%app.slugger_to_lower%'
+    
+    # argument pour la maintenance
+    App\EventSubscriber\MaintenanceSubscriber:
+        arguments:
+            $maintenanceEnabled: '%app.is_maintenance%'
+            $test: '%app.is_maintenance%'
+    
+    # https://symfony.com/bundles/DoctrineBundle/current/entity-listeners.html
+    # paramétrage de MovieListener
+    App\EventListener\MovieListener:
+        tags:
+            -
+                # le nom du type d'évènement, dans notre cas, un évènement doctrine entity listener
+                name: doctrine.orm.entity_listener
+                # le nom de l'event : avant update
+                event: preUpdate
+                # l'entity sur laquelle on veut être notifier
+                entity: App\Entity\Movie
+                # method attribute is optional
+                method: updateSlug
+            -
+                # le nom du type d'évènement, dans notre cas, un évènement doctrine entity listener
+                name: doctrine.orm.entity_listener
+                # le nom de l'event : avant création
+                event: prePersist
+                # l'entity sur laquelle on veut être notifier
+                entity: App\Entity\Movie
+                # method attribute is optional
+                method: updateSlug
+
+

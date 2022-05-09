@@ -1,0 +1,84 @@
+<html>
+<head>
+<meta charset='utf-8'>
+<style>
+  #mld .relation { font-variant: small-caps; font-weight: bold }
+  #mld .primary { text-decoration: underline }
+  #mld .foreign { font-style: oblique }
+  #mld .normal { }
+</style>
+</head>
+<body>
+<div id='mld'>
+<div>
+  <span class='relation'>season</span> (
+    <span class='primary'>code_season</span>,
+    <span class='normal'>title</span>,
+    <span class='normal'>episode</span>,
+    <span class='foreign'>code_movie</span>
+  )
+</div>
+<div>
+  <span class='relation'>own</span> (
+    <span class='foreign primary'>code_movie</span>,
+    <span class='foreign primary'>code_genre</span>
+  )
+</div>
+<div>
+  <span class='relation'>genre</span> (
+    <span class='primary'>code_genre</span>,
+    <span class='normal'>name</span>
+  )
+</div>
+<div>
+  <span class='relation'>play</span> (
+    <span class='foreign primary'>code_movie</span>,
+    <span class='foreign primary'>code_actor</span>,
+    <span class='normal'>role</span>
+  )
+</div>
+<div>
+  <span class='relation'>actor</span> (
+    <span class='primary'>code_actor</span>,
+    <span class='normal'>firstname</span>,
+    <span class='normal'>lastname</span>
+  )
+</div>
+<div>
+  <span class='relation'>movies</span> (
+    <span class='primary'>code_movie</span>,
+    <span class='normal'>type</span>,
+    <span class='normal'>title</span>,
+    <span class='normal'>duration</span>,
+    <span class='normal'>summary</span>,
+    <span class='normal'>synopsis</span>,
+    <span class='normal'>rating</span>,
+    <span class='normal'>date</span>,
+    <span class='normal'>poster</span>
+  )
+</div>
+<div>
+  <span class='relation'>user</span> (
+    <span class='primary'>code_user</span>,
+    <span class='normal'>firstname</span>,
+    <span class='normal'>lastname</span>,
+    <span class='normal'>password</span>,
+    <span class='normal'>email</span>,
+    <span class='normal'>role</span>,
+    <span class='normal'>status</span>
+  )
+</div>
+<div>
+  <span class='relation'>review</span> (
+    <span class='primary'>code_review</span>,
+    <span class='normal'>title</span>,
+    <span class='normal'>decsription</span>,
+    <span class='normal'>date</span>,
+    <span class='normal'>rating</span>,
+    <span class='foreign'>code_user</span>,
+    <span class='foreign'>code_movie</span>
+  )
+</div>
+</div>
+</body>
+</html>

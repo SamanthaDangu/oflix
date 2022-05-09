@@ -1,0 +1,7 @@
+#index:
+#    path: /
+#    controller: App\Controller\MainController::home
+
+# la route pour l'authentification avec lexik pour notre API
+api_login_check:
+    path: /api/login_check

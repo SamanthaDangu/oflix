@@ -1,0 +1,13 @@
+belongs to, 0N movies, 11 season
+season: code_season, title, episode
+own, 1N movies, 0N genre
+genre: code_genre, name
+play, 1N movies, 0N actor : role
+actor: code_actor, firstname, lastname
+
+movies: code_movie, type, title, duration, summary, synopsis, rating, date, poster
+
+user: code_user, firstname, lastname, password, email, role, status
+write, 0N user, 11 review
+review: code_review, title, decsription, date, rating
+comment, 0N movies, 11 review
