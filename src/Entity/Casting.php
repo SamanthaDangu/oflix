@@ -17,15 +17,8 @@ class Casting
     #[ORM\Column(type: 'string', length: 255)]
     private $role;
 
-    /*
-    @Assert\Range(
-          min = 1,
-          max = 5,
-          notInRangeMessage = "Entrez une valeur entre 0 et 5",
     #[ORM\Column(type: 'integer')]
     #[Assert\Positive]
-     * @Assert\Positive
-     */
     private $creditOrder;
 
     #[ORM\ManyToOne(targetEntity: Movie::class, inversedBy: 'castings')]
