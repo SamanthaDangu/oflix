@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\UserRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -22,11 +24,21 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private $email;
 
     #[ORM\Column(type: 'json')]
-    #[Assert\NotBlank]
     private $roles = [];
 
     #[ORM\Column(type: 'string')]
     private $password;
+
+    #[ORM\ManyToMany(targetEntity: \App\Entity\Movie::class)]
+    #[ORM\JoinTable(name: 'user_favorite_movie')]
+    #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
+    #[ORM\InverseJoinColumn(name: 'movie_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
+    private Collection $favoriteMovies;
+
+    public function __construct()
+    {
+        $this->favoriteMovies = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -111,6 +123,32 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->password = $password;
 
         return $this;
+    }
+
+    public function getFavoriteMovies(): Collection
+    {
+        return $this->favoriteMovies;
+    }
+
+    public function addFavoriteMovie(\App\Entity\Movie $movie): self
+    {
+        if (!$this->favoriteMovies->contains($movie)) {
+            $this->favoriteMovies->add($movie);
+        }
+
+        return $this;
+    }
+
+    public function removeFavoriteMovie(\App\Entity\Movie $movie): self
+    {
+        $this->favoriteMovies->removeElement($movie);
+
+        return $this;
+    }
+
+    public function hasFavoriteMovie(\App\Entity\Movie $movie): bool
+    {
+        return $this->favoriteMovies->contains($movie);
     }
 
     /**

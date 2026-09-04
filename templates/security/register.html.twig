@@ -1,0 +1,26 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Créer un compte | O'flix{% endblock %}
+
+{% block body %}
+<section class="page-section">
+    <div class="container-xl">
+        <div class="auth-panel">
+            <div class="auth-panel__intro">
+                <span class="movie-card__type">Bienvenue chez O'flix</span>
+                <h1>Votre prochaine histoire commence ici.</h1>
+                <p>Créez votre compte pour garder vos découvertes à portée de main.</p>
+            </div>
+            {{ form_start(registration_form, {attr: {class: 'auth-form'}}) }}
+                {{ form_errors(registration_form) }}
+                {{ form_row(registration_form.email) }}
+                {{ form_row(registration_form.plainPassword.first) }}
+                <p class="form-hint">8 caractères minimum, avec une majuscule, une minuscule, un chiffre et un caractère spécial.</p>
+                {{ form_row(registration_form.plainPassword.second) }}
+                <button class="btn btn-danger w-100" type="submit">Créer mon compte</button>
+                <p class="auth-form__foot">Vous avez déjà un compte ? <a href="{{ path('app_login') }}">Se connecter</a></p>
+            {{ form_end(registration_form) }}
+        </div>
+    </div>
+</section>
+{% endblock %}
