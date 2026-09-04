@@ -5,34 +5,26 @@ namespace App\Entity;
 use App\Repository\SeasonRepository;
 use Doctrine\ORM\Mapping as ORM;
 
-/**
- * @ORM\Entity(repositoryClass=SeasonRepository::class)
- */
+#[ORM\Entity(repositoryClass: SeasonRepository::class)]
 class Season
 {
-    /**
-     * @ORM\Id
-     * @ORM\GeneratedValue
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
     private $id;
 
-    /**
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Column(type: 'integer')]
     private $number;
 
-    /**
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Column(type: 'integer')]
     private $episodesNumber;
 
     /**
      * inversedBy="seasons" référence la propriété dans l'autre classe (Movie)
      * 
-     * @ORM\ManyToOne(targetEntity=Movie::class, inversedBy="seasons")
-     * @ORM\JoinColumn(nullable=false)
      */
+    #[ORM\ManyToOne(targetEntity: Movie::class, inversedBy: 'seasons')]
+    #[ORM\JoinColumn(nullable: false)]
     private $movie;
 
     public function getId(): ?int

@@ -7,58 +7,40 @@ use Doctrine\ORM\Mapping as ORM;
 // https://symfony.com/doc/current/best_practices.html#define-validation-constraints-on-the-underlying-object
 use Symfony\Component\Validator\Constraints as Assert;
 
-/**
- * @ORM\Entity(repositoryClass=ReviewRepository::class)
- */
+#[ORM\Entity(repositoryClass: ReviewRepository::class)]
 class Review
 {
-    /**
-     * @ORM\Id
-     * @ORM\GeneratedValue
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
     private $id;
 
-    /**
-     * @ORM\Column(type="string", length=50)
-     * @Assert\NotBlank
-     */
+    #[ORM\Column(type: 'string', length: 50)]
+    #[Assert\NotBlank]
     private $username;
 
-    /**
-     * @ORM\Column(type="string", length=255)
-     * @Assert\NotBlank
-     * @Assert\Email(message = "The email '{{ value }}' is not valid")
-     */
+    #[ORM\Column(type: 'string', length: 255)]
+    #[Assert\NotBlank]
+    #[Assert\Email(message: "The email '{{ value }}' is not valid")]
     private $email;
 
-    /**
-     * @ORM\Column(type="text")
-     * @Assert\NotBlank
-     * @Assert\Length(min=10)
-     */
+    #[ORM\Column(type: 'text')]
+    #[Assert\NotBlank]
+    #[Assert\Length(min: 10)]
     private $content;
 
-    /**
-     * @ORM\Column(type="float")
-     * @Assert\NotBlank
-     */
+    #[ORM\Column(type: 'float')]
+    #[Assert\NotBlank]
     private $rating;
 
-    /**
-     * @ORM\Column(type="json")
-     */
+    #[ORM\Column(type: 'json')]
     private $reactions = [];
 
-    /**
-     * @ORM\Column(type="datetime_immutable")
-     * @Assert\NotBlank
-     */
+    #[ORM\Column(type: 'datetime_immutable')]
+    #[Assert\NotBlank]
     private $watchedAt;
 
-    /**
-     * @ORM\ManyToOne(targetEntity=Movie::class, inversedBy="reviews")
-     */
+    #[ORM\ManyToOne(targetEntity: Movie::class, inversedBy: 'reviews')]
     private $movie;
 
     public function getId(): ?int

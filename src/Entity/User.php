@@ -8,35 +8,24 @@ use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Validator\Constraints as Assert;
 
-/**
- * @ORM\Entity(repositoryClass=UserRepository::class)
- */
+#[ORM\Entity(repositoryClass: UserRepository::class)]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
-    /**
-     * @ORM\Id
-     * @ORM\GeneratedValue
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
     private $id;
 
-    /**
-     * @ORM\Column(type="string", length=180, unique=true)
-     * @Assert\NotBlank
-     * @Assert\Email
-     */
+    #[ORM\Column(type: 'string', length: 180, unique: true)]
+    #[Assert\NotBlank]
+    #[Assert\Email]
     private $email;
 
-    /**
-     * @ORM\Column(type="json")
-          * @Assert\NotBlank
-     */
+    #[ORM\Column(type: 'json')]
+    #[Assert\NotBlank]
     private $roles = [];
 
-    /**
-     * @var string The hashed password
-     * @ORM\Column(type="string")
-     */
+    #[ORM\Column(type: 'string')]
     private $password;
 
     public function getId(): ?int
@@ -80,16 +69,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getDisplayRole(): string
     {
         $roleToDisplay = '';
-        if (in_array('ROLE_ADMIN', $this->roles))
-        {
+        if (in_array('ROLE_ADMIN', $this->roles)) {
             $roleToDisplay = 'Adm.';
-        }
-        elseif (in_array('ROLE_MANAGER', $this->roles))
-        {
+        } elseif (in_array('ROLE_MANAGER', $this->roles)) {
             $roleToDisplay = 'Man.';
-        }
-        elseif (in_array('ROLE_USER', $this->roles))
-        {
+        } elseif (in_array('ROLE_USER', $this->roles)) {
             $roleToDisplay = 'Util.';
         }
         return $roleToDisplay;

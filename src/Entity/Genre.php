@@ -9,36 +9,22 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 
-/**
- * @ORM\Entity(repositoryClass=GenreRepository::class)
- */
+#[ORM\Entity(repositoryClass: GenreRepository::class)]
 class Genre
 {
-    /**
-     * @ORM\Id
-     * @ORM\GeneratedValue
-     * @ORM\Column(type="integer")
-     * @Groups({"list_genre"})
-     * @Groups({"show_genre"})
-     */
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
+    #[Groups(['list_genre', 'show_genre'])]
     private $id;
 
-    /**
-     * @ORM\Column(type="string", length=50)
-     * @Groups({"list_genre", "list_movie", "show_genre"})
-     * @Assert\Length(
-     *      min = 5,
-     *      max = 50,
-     *      minMessage = "Your genre name must be at least {{ limit }} characters long",
-     *      maxMessage = "Your genre name cannot be longer than {{ limit }} characters"
-     * )
-     */
+    #[ORM\Column(type: 'string', length: 50)]
+    #[Groups(['list_genre', 'list_movie', 'show_genre'])]
+    #[Assert\Length(min: 5, max: 50, minMessage: 'Your genre name must be at least {{ limit }} characters long', maxMessage: 'Your genre name cannot be longer than {{ limit }} characters')]
     private $name;
 
-    /**
-     * @ORM\ManyToMany(targetEntity=Movie::class, mappedBy="genres")
-     * @Groups({"list_genre"})
-     */
+    #[ORM\ManyToMany(targetEntity: Movie::class, mappedBy: 'genres')]
+    #[Groups(['list_genre'])]
     private $movies;
 
     public function __construct()
@@ -98,7 +84,7 @@ class Genre
      * !Groups can only be added on methods beginning with "get", "is", "has" or "set".
      * 
      * @Groups({"show_genre"})
-     */    
+     */
     public function getCountMovie(): int
     {
         return count($this->movies);

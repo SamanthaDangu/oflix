@@ -7,31 +7,21 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
-/**
- * @ORM\Entity(repositoryClass=ActorRepository::class)
- */
+#[ORM\Entity(repositoryClass: ActorRepository::class)]
 class Actor
 {
-    /**
-     * @ORM\Id
-     * @ORM\GeneratedValue
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
     private $id;
 
-    /**
-     * @ORM\Column(type="string", length=255)
-     */
+    #[ORM\Column(type: 'string', length: 255)]
     private $firstname;
 
-    /**
-     * @ORM\Column(type="string", length=255)
-     */
+    #[ORM\Column(type: 'string', length: 255)]
     private $lastname;
 
-    /**
-     * @ORM\OneToMany(targetEntity=Casting::class, mappedBy="actor")
-     */
+    #[ORM\OneToMany(targetEntity: Casting::class, mappedBy: 'actor')]
     private $castings;
 
     public function __construct()
@@ -100,6 +90,6 @@ class Actor
 
     public function getFullname(): string
     {
-        return 'tagada : ' . $this->getFirstname().' '.$this->getLastname();
+        return 'tagada : ' . $this->getFirstname() . ' ' . $this->getLastname();
     }
 }

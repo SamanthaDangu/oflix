@@ -10,113 +10,73 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 
-/**
- * @ORM\Entity(repositoryClass=MovieRepository::class)
- * @ORM\HasLifecycleCallbacks()
- */
+#[ORM\Entity(repositoryClass: MovieRepository::class)]
+#[ORM\HasLifecycleCallbacks]
 class Movie
 {
-    /**
-     * @ORM\Id
-     * @ORM\GeneratedValue
-     * @ORM\Column(type="integer")
-     * @Groups({"show_genre"})
-     * @Groups({"show_movie"})
-     */
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
+    #[Groups(['show_genre', 'show_movie'])]
     private $id;
 
-    /**
-     * @ORM\Column(type="string", length=255)
-     * @link https://symfony.com/doc/5.4/serializer.html#using-serialization-groups-annotations
-     * @Groups({"list_movie"})
-     * @Groups({"list_genre"})
-     * @Groups({"show_genre"})
-     * @Groups({"show_movie"})
-     */
+    #[ORM\Column(type: 'string', length: 255)]
+    #[Groups(['list_movie', 'list_genre', 'show_genre', 'show_movie'])]
     private $title;
 
-    /**
-     * @ORM\Column(type="date")
-     * @Groups({"list_movie"})
-     * @Groups({"show_movie"})
-     * @Assert\NotBlank(message = "The release date is mandatory")
-     */
+    #[ORM\Column(type: 'date')]
+    #[Groups(['list_movie', 'show_movie'])]
+    #[Assert\NotBlank(message: 'The release date is mandatory')]
     private $releaseDate;
 
-    /**
-     * @ORM\Column(type="integer")
-     * @Groups({"show_movie"})
-     * @Assert\NotBlank(message = "The duration is mandatory")
-     */
+    #[ORM\Column(type: 'integer')]
+    #[Groups(['show_movie'])]
+    #[Assert\NotBlank(message: 'The duration is mandatory')]
     private $duration;
 
-    /**
-     * @ORM\Column(type="string", length=25)
-     * @Groups({"list_movie"})
-     * @Groups({"show_movie"})
-     */
+    #[ORM\Column(type: 'string', length: 25)]
+    #[Groups(['list_movie', 'show_movie'])]
     private $type;
 
-    /**
-     * @ORM\Column(type="text")
-     */
+    #[ORM\Column(type: 'text')]
     private $synopsis;
 
-    /**
-     * @ORM\Column(type="text")
-     */
+    #[ORM\Column(type: 'text')]
     private $summary;
 
-    /**
-     * @ORM\Column(type="float", nullable=true)
-     * @Groups({"list_movie"})
-     */
+    #[ORM\Column(type: 'float', nullable: true)]
+    #[Groups(['list_movie'])]
     private $rating;
 
-    /**
-     * @ORM\Column(type="text")
-     * @Groups({"list_movie", "show_genre"})
-     */
+    #[ORM\Column(type: 'text')]
+    #[Groups(['list_movie', 'show_genre'])]
     private $poster;
 
     /**
      * mappedBy="movie" référence la propriété dans l'autre classe (Season)
      * 
-     * @ORM\OneToMany(targetEntity=Season::class, mappedBy="movie", orphanRemoval=true)
      */
+    #[ORM\OneToMany(targetEntity: Season::class, mappedBy: 'movie', orphanRemoval: true)]
     private $seasons;
 
-    /**
-     * @ORM\OneToMany(targetEntity=Review::class, mappedBy="movie", orphanRemoval=true)
-     */
+    #[ORM\OneToMany(targetEntity: Review::class, mappedBy: 'movie', orphanRemoval: true)]
     private $reviews;
 
-    /**
-     * @ORM\ManyToMany(targetEntity=Genre::class, inversedBy="movies")
-     * @ORM\OrderBy({"name" = "DESC"})
-     * @Groups({"list_movie"})        
-     * 
-     * * Si on souhaite qu'un film ait au moins 1 genre
-     * @Assert\Count(min=1)  
-     */
+    #[ORM\ManyToMany(targetEntity: Genre::class, inversedBy: 'movies')]
+    #[ORM\OrderBy(['name' => 'DESC'])]
+    #[Groups(['list_movie'])]
+    #[Assert\Count(min: 1)]
     private $genres;
 
-    /**
-     * @ORM\OneToMany(targetEntity=Casting::class, mappedBy="movie", cascade={"remove"})
-     * @link https://www.doctrine-project.org/projects/doctrine-orm/en/2.10/reference/annotations-reference.html#orderby
-     * @ORM\OrderBy({"creditOrder" = "ASC"})
-     */
+    #[ORM\OneToMany(targetEntity: Casting::class, mappedBy: 'movie', cascade: ['remove'])]
+    #[ORM\OrderBy(['creditOrder' => 'ASC'])]
     private $castings;
 
-    /**
-     * @ORM\Column(type="string", length=255, nullable=true)
-     */
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private $slug;
 
-    /**
-     * @ORM\Column(type="datetime", nullable=true)
-     * @Groups({"list_movie"})
-     */
+    #[ORM\Column(type: 'datetime', nullable: true)]
+    #[Groups(['list_movie'])]
     private $updatedAt;
 
 
@@ -146,7 +106,7 @@ class Movie
 
         return $this;
     }
-/*
+    /*
     public function getReleaseDate(): ?\DateTimeInterface
     {
         return $this->release_date;
@@ -367,7 +327,7 @@ class Movie
 
     public function getSomethingForCastingForm()
     {
-        return $this->title . ' (' . $this->duration .' min.)';
+        return $this->title . ' (' . $this->duration . ' min.)';
     }
 
     public function getSlug(): ?string
@@ -395,9 +355,7 @@ class Movie
     }
 
     //! ne pas oublier au niveau de la classe : @ ORM\HasLifecycleCallbacks()
-    /**
-     * @ORM\PreUpdate
-     */
+    #[ORM\PreUpdate]
     public function setValuesOnPreUpdate(): void
     {
         // cette function sera appelle avant chaque update
