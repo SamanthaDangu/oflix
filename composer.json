@@ -1,4 +1,6 @@
 {
+    "name": "samanthadangu/oflix",
+    "description": "Application Symfony de catalogue de films et séries O'flix.",
     "type": "project",
     "license": "proprietary",
     "minimum-stability": "stable",
