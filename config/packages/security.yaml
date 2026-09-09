@@ -1,5 +1,4 @@
 security:
-    enable_authenticator_manager: true
     # https://symfony.com/doc/current/security.html#registering-the-user-hashing-passwords
     password_hashers:
         Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
@@ -47,6 +46,11 @@ security:
                 # where to redirect after logout
                 # target: app_any_route
 
+            # protege /login contre le bourrage de mots de passe (brute force)
+            # https://symfony.com/doc/current/security/login_throttling.html
+            login_throttling:
+                max_attempts: 5
+
             # activate different ways to authenticate
             # https://symfony.com/doc/current/security.html#the-firewall
 
@@ -60,6 +64,13 @@ security:
     #   Admin : Si ROLE_MANAGER : accès aux pages de listes movie, genres etc. et pages show (si existantes).
     # Admin : Sécuriser toutes les routes /add /edit /delete avec ROLE_ADMIN.
     access_control:
+        - { path: '^/register$', roles: PUBLIC_ACCESS }
+        - { path: '^/favorites$', roles: ROLE_USER }
+        - { path: '^/movie/[^/]+/favorite', roles: ROLE_USER }
+        - { path: '^/api/movies$', roles: ROLE_MANAGER, methods: [POST] }
+        - { path: '^/api/secure/genres$', roles: ROLE_MANAGER, methods: [POST] }
+        - { path: '^/back/user/new$', roles: ROLE_ADMIN }
+        - { path: '^/back/user/[^/]+/edit$', roles: ROLE_ADMIN }
         # ^ début de l'url
         # /back pour limiter au backoffice
         # [^/] tout ce qui n'est pas un / (=> le nom du modèle peut importe le model)
@@ -67,18 +78,18 @@ security:
         # / le slash
         # \d+ un nombre
         # $ fin de l'url
-        - { path: ^/back/([^/]+)/\d+$, roles: ROLE_ADMIN, methods: [POST] } # route de delete de n'importe quel modèle
-        - { path: ^/back/[^/]+/\d+/edit$, roles: ROLE_MANAGER } # route de delete de n'importe quel modèle
-        # - { path: ^/back/[^/]+/new$, roles: ROLE_ADMIN } # routes add de n'importe quel modèle
-        - { path: ^/back/[^/]+/\d+$, roles: ROLE_MANAGER, methods: [GET] } # route de show de n'importe quel modèle
-        - { path: ^/back/[^/]+/$, roles: ROLE_MANAGER } # route de liste de n'importe quel modèle
-        - { path: ^/movie/\d+/review, roles: ROLE_USER }
-        - { path: ^/back/, roles: ROLE_MANAGER }
-        # - { path: ^/profile, roles: ROLE_USER }
+        - { path: '^/back/([^/]+)/\d+$', roles: ROLE_ADMIN, methods: [POST] } # route de delete de n'importe quel modèle
+        - { path: '^/back/[^/]+/\d+/edit$', roles: ROLE_ADMIN } # route d'edit de n'importe quel modèle (ROLE_MANAGER = lecture seule, cf. commentaire de politique ci-dessus)
+        - { path: '^/back/[^/]+/new$', roles: ROLE_ADMIN } # routes add de n'importe quel modèle
+        - { path: '^/back/[^/]+/\d+$', roles: ROLE_MANAGER, methods: [GET] } # route de show de n'importe quel modèle
+        - { path: '^/back/[^/]+/$', roles: ROLE_MANAGER } # route de liste de n'importe quel modèle
+        - { path: '^/movie/\d+/review', roles: ROLE_USER }
+        - { path: '^/back/', roles: ROLE_MANAGER }
+        - { path: '^/profile', roles: ROLE_USER }
         # ACL pour notre API
-        - { path: ^/api/secure,       roles: IS_AUTHENTICATED_FULLY }
-        - { path: ^/api/login, roles: PUBLIC_ACCESS }
-        - { path: ^/api, roles: PUBLIC_ACCESS }
+        - { path: '^/api/secure', roles: IS_AUTHENTICATED_FULLY }
+        - { path: '^/api/login', roles: PUBLIC_ACCESS }
+        - { path: '^/api', roles: PUBLIC_ACCESS }
     
     role_hierarchy:
         ROLE_ADMIN:   ROLE_MANAGER

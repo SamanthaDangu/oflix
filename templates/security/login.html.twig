@@ -1,16 +1,12 @@
-{% extends 'base.html.twig' %}
+{% extends 'security/_auth_layout.html.twig' %}
 
 {% block title %}Connexion | O'flix{% endblock %}
 
-{% block body %}
-	<section class="page-section">
-	<div class="container-xl">
-	<div class="auth-panel">
-		<div class="auth-panel__intro">
-			<span class="movie-card__type">Votre espace cinéma</span>
-			<h1>Ravi de vous revoir.</h1>
-			<p>Retrouvez vos films, vos séries et vos prochaines envies.</p>
-		</div>
+{% block auth_badge %}Votre espace cinéma{% endblock %}
+{% block auth_title %}Ravi de vous revoir.{% endblock %}
+{% block auth_subtitle %}Retrouvez vos films, vos séries et vos prochaines envies.{% endblock %}
+
+{% block auth_content %}
 	<form method="post" class="auth-form">
 		{% if error %}
 			<div class="alert alert-danger">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
@@ -18,15 +14,14 @@
 
 		{% if app.user %}
 			<div class="mb-3">
-				You are logged in as
-				{{ app.user.username }},
-				<a href="{{ path('app_logout') }}">Logout</a>
+				Vous êtes déjà connecté en tant que {{ app.user.displayName }}.
+				<a href="{{ path('app_logout') }}">Se déconnecter</a>
 			</div>
 		{% endif %}
 
 		<h2 class="h4 mb-4">Se connecter</h2>
-		<label for="inputEmail">Adresse email</label>
-		<input type="email" value="{{ last_username }}" name="email" id="inputEmail" class="form-control" autocomplete="email" required autofocus>
+		<label for="inputIdentifier">Email ou pseudo</label>
+		<input type="text" value="{{ last_username }}" name="identifier" id="inputIdentifier" class="form-control" autocomplete="username" required autofocus>
 		<label for="inputPassword">Mot de passe</label>
 		<input type="password" name="password" id="inputPassword" class="form-control" autocomplete="current-password" required>
 
@@ -36,7 +31,7 @@
 		{#
             Uncomment this section and add a remember_me option below your firewall to activate remember me functionality.
             See https://symfony.com/doc/current/security/remember_me.html
-    
+
             <div class="checkbox mb-3">
                 <label>
                     <input type="checkbox" name="_remember_me"> Remember me
@@ -49,5 +44,4 @@
 		</button>
 		<p class="auth-form__foot">Pas encore de compte ? <a href="{{ path('app_register') }}">Créer un compte</a></p>
 	</form>
-	</div></div></section>
 {% endblock %}

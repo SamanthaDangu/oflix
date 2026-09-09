@@ -1,0 +1,16 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<section class="page-section">
+    <div class="container-xl">
+        <div class="auth-panel">
+            <div class="auth-panel__intro">
+                <span class="movie-card__type">{% block auth_badge %}{% endblock %}</span>
+                <h1>{% block auth_title %}{% endblock %}</h1>
+                <p>{% block auth_subtitle %}{% endblock %}</p>
+            </div>
+            {% block auth_content %}{% endblock %}
+        </div>
+    </div>
+</section>
+{% endblock %}

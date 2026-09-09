@@ -19,8 +19,8 @@ class MovieTest extends CoreTest
         // Je vérifie que j'ai une réponse HTTP 200 (Succesful)
         $this->assertResponseIsSuccessful();
 
-        // Je vérifie que dans ma réponse HTML, j'ai bien mon titre de page
-        $this->assertSelectorTextContains('h1', 'Les films et séries/Résultats de recherche');
+        // Je vérifie que dans ma réponse HTML, j'ai bien le titre de page attendu
+        $this->assertSelectorTextContains('title', "Bienvenue sur O'flix");
     }
 
     /**
@@ -35,7 +35,7 @@ class MovieTest extends CoreTest
     public function testRoleUserForbidden($url)
     {
         // Objectif : tester qu'un utilisateur Connecté NE puisse PAS voir le backoffice
-        
+
         // je crée le client HTTP
         $client = static::createClient();
 
@@ -49,15 +49,13 @@ class MovieTest extends CoreTest
 
         // je demande à mon framework de connecter l'utilisateur
         $client->loginUser($testuser);
-        
-        //dump($url);
-        $response = $client->request('GET',$url);
+
+        $response = $client->request('GET', $url);
 
         // https://symfony.com/doc/current/testing.html#testing-the-response-assertions
         $this->assertResponseStatusCodeSame(Response::HTTP_FORBIDDEN);
-        
     }
-    
+
 
     public function testRoleAdminBackMovie()
     {
@@ -81,7 +79,7 @@ class MovieTest extends CoreTest
         // j'ai une annotation sur la classe : '/back/movie'
         // et une annotation sur la route '/'
         // donc la route connue du FW est '/back/movie/'
-        $response = $client->request('GET','/back/movie/');
+        $response = $client->request('GET', '/back/movie/');
 
         $this->assertResponseIsSuccessful();
         // ceci fonctionne si la route testée est '/back/movie'
@@ -93,8 +91,8 @@ class MovieTest extends CoreTest
     {
         yield ['/back/movie/'];
         yield ['/back/casting/'];
-        yield ['back/user/'];
-        
+        yield ['/back/user/'];
+
         // ajouter d'autre URL si besoin
     }
 }

@@ -4,24 +4,14 @@ namespace App\Tests;
 
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
-class CoreTest extends WebTestCase
+abstract class CoreTest extends WebTestCase
 {
-    /**
-    * Override PHPUnit fail method
-    * to catch "assertResponse" exceptions
-    * 
-    * @link https://devdocs.io/phpunit~9/fixtures
-    */
-    protected function onNotSuccessfulTest(\Throwable $t): void
+    protected function setUp(): void
     {
-        // If "assertResponse" is found in the trace, custom message
-        if (strpos($t->getTraceAsString(), 'assertResponse') > 0) {
-            $arrayMessage = explode("\n", $t->getMessage());
-            $message = $arrayMessage[0] . "\n" . $arrayMessage[1];
-            $this->fail($message);
-        }
+        $databaseUrl = $_SERVER['DATABASE_URL'] ?? $_ENV['DATABASE_URL'] ?? getenv('DATABASE_URL') ?: '';
 
-        // Other Exceptions
-        throw $t;
+        if (str_contains($databaseUrl, 'db_user') || str_contains($databaseUrl, 'db_password') || str_contains($databaseUrl, 'db_name')) {
+            $this->markTestSkipped('Base de test Doctrine non configuree : DATABASE_URL contient encore les valeurs placeholder.');
+        }
     }
 }

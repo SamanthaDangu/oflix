@@ -28,10 +28,14 @@ class RegistrationController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $email = mb_strtolower(trim((string) $user->getEmail()));
+            $pseudo = trim((string) $user->getPseudo());
             $user->setEmail($email);
+            $user->setPseudo($pseudo);
 
             if ($userRepository->findOneBy(['email' => $email])) {
                 $form->get('email')->addError(new FormError('Cette adresse email est déjà utilisée.'));
+            } elseif ($userRepository->findOneBy(['pseudo' => $pseudo])) {
+                $form->get('pseudo')->addError(new FormError('Ce pseudo est déjà utilisé.'));
             } else {
                 $user->setRoles(['ROLE_USER']);
                 $user->setPassword($passwordHasher->hashPassword($user, (string) $form->get('plainPassword')->getData()));

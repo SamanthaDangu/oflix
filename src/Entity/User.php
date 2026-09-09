@@ -23,6 +23,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Assert\Email]
     private $email;
 
+    #[ORM\Column(type: 'string', length: 50, nullable: true, unique: true)]
+    private $pseudo;
+
     #[ORM\Column(type: 'json')]
     private $roles = [];
 
@@ -55,6 +58,26 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->email = $email;
 
         return $this;
+    }
+
+    public function getPseudo(): ?string
+    {
+        return $this->pseudo;
+    }
+
+    public function setPseudo(?string $pseudo): self
+    {
+        $this->pseudo = $pseudo;
+
+        return $this;
+    }
+
+    /**
+     * Nom affiché publiquement : le pseudo, ou l'email à défaut (comptes créés avant son ajout)
+     */
+    public function getDisplayName(): string
+    {
+        return $this->pseudo ?: $this->email;
     }
 
     /**
@@ -98,7 +121,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         $roles = $this->roles;
         // guarantee every user at least has ROLE_USER
-        // $roles[] = 'ROLE_USER';
+        $roles[] = 'ROLE_USER';
 
         return array_unique($roles);
     }
@@ -165,7 +188,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     /**
      * @see UserInterface
      */
-    public function eraseCredentials()
+    public function eraseCredentials(): void
     {
         // If you store any temporary, sensitive data on the user, clear it here
         // $this->plainPassword = null;

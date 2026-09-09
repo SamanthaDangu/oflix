@@ -1,39 +1,47 @@
-{% extends 'base.html.twig' %}
+{% extends 'back/back_base.html.twig' %}
 
-{% block title %}User index{% endblock %}
+{% block title %}Utilisateurs | Back-office{% endblock %}
 
-{% block body %}
-    <h1>User index</h1>
+{% block title_admin %}Utilisateurs{% endblock %}
 
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Id</th>
-                <th>Email</th>
-                <th>Roles</th>
-                <th>Password</th>
-                <th>actions</th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for user in users %}
-            <tr>
-                <td>{{ user.id }}</td>
-                <td>{{ user.email }}</td>
-                <td>{{ user.roles ? user.roles|json_encode : '' }}</td>
-                <td>{{ user.password }}</td>
-                <td>
-                    <a href="{{ path('back_user_show', {'id': user.id}) }}">show</a>
-                    <a href="{{ path('back_user_edit', {'id': user.id}) }}">edit</a>
-                </td>
-            </tr>
-        {% else %}
-            <tr>
-                <td colspan="5">no records found</td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+{% block content %}
+    <div class="admin-card">
+        <div class="admin-card__head">
+            <div>
+                <h2 class="h5 mb-1">Comptes</h2>
+                <p class="text-muted mb-0">{{ users|length }} compte{{ users|length > 1 ? 's' : '' }} enregistré{{ users|length > 1 ? 's' : '' }}.</p>
+            </div>
+            <a href="{{ path('back_user_new') }}" class="btn btn-danger">Ajouter</a>
+        </div>
 
-    <a href="{{ path('back_user_new') }}">Create new</a>
+        <div class="table-responsive">
+            <table class="table admin-table">
+                <thead>
+                    <tr>
+                        <th>Id</th>
+                        <th>Pseudo</th>
+                        <th>Email</th>
+                        <th>Rôles</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for user in users %}
+                    <tr>
+                        <td>{{ user.id }}</td>
+                        <td>{{ user.pseudo ?: '—' }}</td>
+                        <td>{{ user.email }}</td>
+                        <td>{{ user.roles|join(', ') }}</td>
+                        <td class="text-end">
+                            <a href="{{ path('back_user_show', {'id': user.id}) }}" class="btn btn-sm btn-outline-danger">Voir</a>
+                            <a href="{{ path('back_user_edit', {'id': user.id}) }}" class="btn btn-sm btn-outline-secondary">Modifier</a>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr><td colspan="5" class="text-muted text-center py-4">Aucun utilisateur trouvé.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 {% endblock %}
