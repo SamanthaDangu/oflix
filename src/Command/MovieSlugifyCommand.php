@@ -5,16 +5,15 @@ namespace App\Command;
 use App\Repository\MovieRepository;
 use App\Service\MySlugger;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+#[AsCommand(name: 'app:movies:slugify', description: 'Slugifies movies titles in the Database')]
 class MovieSlugifyCommand extends Command
 {
-    protected static $defaultName = 'app:movies:slugify';
-    protected static $defaultDescription = 'Slugifies movies titles in the Database';
-
     // Pour interagir avec les films dans la BDD
     private $movieRepository;
     // Pour pouvoir utiliser MySlugger

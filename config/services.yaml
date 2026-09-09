@@ -5,10 +5,7 @@
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
     app.slugger_to_lower: false
-    app.omdb_api_key: '%env(OMDB_API_KEY)%'
-    # si je ne précise pas que ce paramètre est une valeur boolean, il me donne du texte
-    # et PHP dira le texte en bool, c'est true /!\
-    app.is_maintenance: '%env(bool:IS_MAINTENANCE)%'
+    app.tmdb_api_key: '%env(TMDB_API_KEY)%'
 
 services:
     # default configuration for services in *this* file
@@ -33,12 +30,6 @@ services:
     App\Service\MySlugger:
         arguments:
             $toLower: '%app.slugger_to_lower%'
-    
-    # argument pour la maintenance
-    App\EventSubscriber\MaintenanceSubscriber:
-        arguments:
-            $maintenanceEnabled: '%app.is_maintenance%'
-            $test: '%app.is_maintenance%'
     
     # https://symfony.com/bundles/DoctrineBundle/current/entity-listeners.html
     # paramétrage de MovieListener

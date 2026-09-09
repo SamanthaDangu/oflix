@@ -12,6 +12,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: MovieRepository::class)]
 #[ORM\HasLifecycleCallbacks]
+#[ORM\Index(columns: ['tmdb_id', 'type'], name: 'idx_movie_tmdb_id_type')]
 class Movie
 {
     #[ORM\Id]
@@ -69,7 +70,6 @@ class Movie
     private $genres;
 
     #[ORM\OneToMany(targetEntity: Casting::class, mappedBy: 'movie', cascade: ['remove'])]
-    #[ORM\OrderBy(['creditOrder' => 'ASC'])]
     private $castings;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
@@ -78,6 +78,9 @@ class Movie
     #[ORM\Column(type: 'datetime', nullable: true)]
     #[Groups(['list_movie'])]
     private $updatedAt;
+
+    #[ORM\Column(type: 'integer', nullable: true)]
+    private $tmdbId;
 
 
     public function __construct()
@@ -106,19 +109,7 @@ class Movie
 
         return $this;
     }
-    /*
-    public function getReleaseDate(): ?\DateTimeInterface
-    {
-        return $this->release_date;
-    }
 
-    public function setReleaseDate(\DateTimeInterface $release_date): self
-    {
-        $this->release_date = $release_date;
-
-        return $this;
-    }
-*/
     public function getDuration(): ?int
     {
         return $this->duration;
@@ -317,14 +308,6 @@ class Movie
         return $this;
     }
 
-    // Si on veux pouvoir écrire un objet
-    /*
-    public function __toString(): string
-    {
-        return $this->title;
-    } 
-    */
-
     public function getSomethingForCastingForm()
     {
         return $this->title . ' (' . $this->duration . ' min.)';
@@ -350,6 +333,18 @@ class Movie
     public function setUpdatedAt(?\DateTimeInterface $updatedAt): self
     {
         $this->updatedAt = $updatedAt;
+
+        return $this;
+    }
+
+    public function getTmdbId(): ?int
+    {
+        return $this->tmdbId;
+    }
+
+    public function setTmdbId(?int $tmdbId): self
+    {
+        $this->tmdbId = $tmdbId;
 
         return $this;
     }

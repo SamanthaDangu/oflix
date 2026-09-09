@@ -8,6 +8,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: ActorRepository::class)]
+#[ORM\Index(columns: ['tmdb_id'], name: 'idx_actor_tmdb_id')]
 class Actor
 {
     #[ORM\Id]
@@ -23,6 +24,9 @@ class Actor
 
     #[ORM\OneToMany(targetEntity: Casting::class, mappedBy: 'actor')]
     private $castings;
+
+    #[ORM\Column(type: 'integer', nullable: true)]
+    private $tmdbId;
 
     public function __construct()
     {
@@ -90,6 +94,18 @@ class Actor
 
     public function getFullname(): string
     {
-        return 'tagada : ' . $this->getFirstname() . ' ' . $this->getLastname();
+        return $this->getFirstname() . ' ' . $this->getLastname();
+    }
+
+    public function getTmdbId(): ?int
+    {
+        return $this->tmdbId;
+    }
+
+    public function setTmdbId(?int $tmdbId): self
+    {
+        $this->tmdbId = $tmdbId;
+
+        return $this;
     }
 }
