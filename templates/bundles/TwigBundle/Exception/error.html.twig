@@ -1,13 +1,14 @@
 {% extends 'base.html.twig' %}
 
+{% block title %}Erreur {{ status_code }} | O'flix{% endblock %}
+
 {% block body %}
-
-<div class="my-5 py-5 text-center">
-    <span class="fs-1">💥</span>
-    <h1 class="display-6 fw-bold">{{ exception.message }}</h1>
-    <div class="col-lg-6 mx-auto">
-        <p class="lead mb-4 text-muted">{{ status_code }} {{ status_text }}</p>
+<section class="page-section error-page">
+    <div class="container-xl text-center">
+        <span class="error-page__code">{{ status_code }}</span>
+        <h1>Un imprévu de diffusion.</h1>
+        <p class="lead">Une erreur est survenue. Merci de réessayer dans quelques instants.</p>
+        <a href="{{ path('movie_home') }}" class="btn btn-danger"><i class="bi bi-house-door"></i> Retour à l'accueil</a>
     </div>
-</div>
-
+</section>
 {% endblock %}

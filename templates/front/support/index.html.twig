@@ -1,25 +1,23 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Hello SupportController!{% endblock %}
+{% block title %}Support | O'flix{% endblock %}
 
 {% block body %}
-<style>
-    .example-wrapper { margin: 1em auto; max-width: 800px; width: 95%; font: 18px/1.5 sans-serif; }
-    .example-wrapper code { background: #F5F5F5; padding: 2px 6px; }
-</style>
-
-<div class="example-wrapper">
-    <h1>Hello {{ controller_name }}! ✅</h1>
-
-    This friendly message is coming from:
-    <ul>
-        <li>Your controller at <code><a href="{{ '/var/www/html/Yuna/symfony/oflix-JB-oclock/src/Controller/SupportController.php'|file_link(0) }}">src/Controller/SupportController.php</a></code></li>
-        <li>Your template at <code><a href="{{ '/var/www/html/Yuna/symfony/oflix-JB-oclock/templates/support/index.html.twig'|file_link(0) }}">templates/support/index.html.twig</a></code></li>
-    </ul>
+<section class="page-section">
+<div class="container-xl">
+    <div class="auth-panel">
+        <div class="auth-panel__intro">
+            <span class="movie-card__type">Centre d'aide</span>
+            <h1>Besoin d'un coup de main ?</h1>
+            <p>Une question sur votre compte ou votre expérience O'flix ? Nous sommes là pour vous répondre.</p>
+        </div>
+        <div class="auth-form">
+            <h2 class="h4 mb-3">Support O'flix</h2>
+            <p class="text-muted">Notre équipe vous accompagne pour profiter pleinement du catalogue.</p>
+            <a class="btn btn-danger mt-3" href="mailto:support@oflix.test">Nous contacter</a>
+        </div>
+    </div>
 </div>
-
-<h1>{{ app.session.get('compteur') }}</h1>
-
-
+</section>
 
 {% endblock %}

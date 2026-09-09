@@ -28,7 +28,7 @@ class EntityDenormalizer implements DenormalizerInterface
      * 
      * @inheritDoc
      */
-    public function supportsDenormalization($data, $type, $format = null)
+    public function supportsDenormalization($data, string $type, string $format = null, array $context = []): bool
     {
         // Est-ce que la classe est de type Entité doctrine ?
         // Est-ce que la donnée fournie est numérique ?
@@ -37,13 +37,19 @@ class EntityDenormalizer implements DenormalizerInterface
 
     /**
      * Cette méthode sera appelée si la condition du dessus est valide
-     * 
+     *
      * @inheritDoc
      */
-    public function denormalize($data, $class, $format = null, array $context = [])
+    public function denormalize($data, string $class, string $format = null, array $context = []): mixed
     {
         // Raccourci depuis l'EntityManager pour aller checher une entité
         // ex : $this->em->find('App\Entity\Genre', 1);
         return $this->em->find($class, $data);
+    }
+
+    public function getSupportedTypes(?string $format): array
+    {
+        // supporte n'importe quelle entité App\Entity\*, dépend de $data (is_numeric) : non "cacheable"
+        return ['*' => false];
     }
 }

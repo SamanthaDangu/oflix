@@ -1,24 +1,23 @@
 {% extends 'base.html.twig' %}
 
-{# 
-    je veux afficher une barre d'admin
-    je définit dans le parent la zone d'admin_nav
-    et j'écrit depuis ici
-#}
+{% block meta_robots %}noindex,nofollow{% endblock %}
+
 {% block admin_nav %}
-<h1>{% block title_admin%}{% endblock %}</h1>
-<ul class="nav bg-light mb-3">
-    <li class="nav-item">
-        <a class="nav-link" href="{{ path('back_movie_index') }}">Films et séries</a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link" href="{{ path('back_user_index') }}">Users</a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link" href="#">Genres</a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link" href="#">Personnes</a>
-    </li>
-</ul>
+<div class="admin-shell">
+    <div class="container-xl">
+        <span class="admin-shell__kicker">Back-office O'flix</span>
+        <h1 class="admin-shell__title">{% block title_admin %}{% endblock %}</h1>
+        <nav class="admin-shell__links" aria-label="Navigation back-office">
+            <a href="{{ path('back_movie_index') }}">Films et séries</a>
+            <a href="{{ path('back_user_index') }}">Utilisateurs</a>
+            <a href="{{ path('back_casting_index') }}">Casting</a>
+        </nav>
+    </div>
+</div>
+{% endblock %}
+
+{% block body %}
+<div class="admin-content container-xl">
+    {% block content %}{% endblock %}
+</div>
 {% endblock %}

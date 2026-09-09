@@ -13,27 +13,15 @@ use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
 use Faker\Factory as Faker;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
-use Symfony\Component\String\Slugger\SluggerInterface;
-use App\Service\MySlugger;
 
 class AppFixtures extends Fixture
 {
-
     private $hasher;
-    private $sluggifier;
-    // la propriété $slugger va recevoir une instance du service SluggerInterface
-    private $slugger;
 
-
-    public function __construct(UserPasswordHasherInterface $hasher, MySlugger $mySlugger)
+    public function __construct(UserPasswordHasherInterface $hasher)
     {
         $this->hasher = $hasher;
-        // cet Objet va nous permettre d'utiliser les méthodes publiques
-        // de notre service MySlugger
-        $this->slugger = $mySlugger;
     }
-
-    public function setSlugger(SluggerInterface $slugger) {}
 
     public function load(ObjectManager $manager): void
     {
@@ -175,7 +163,6 @@ class AppFixtures extends Fixture
             // Je vais créer un Casting
             $casting = new Casting();
             $casting->setRole($faker->name());
-            $casting->setCreditOrder($i);
             // Je vais lui donner un movie depuis la liste
             $randomMovie = $allMovieEntity[mt_rand(0, count($allMovieEntity) - 1)];
             $casting->setMovie($randomMovie);
