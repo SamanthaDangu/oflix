@@ -1,96 +1,49 @@
 {% extends "base.html.twig" %}
 
-{% block title %}Ma liste{% endblock %}
+{% block title %}Ma liste | O'flix{% endblock %}
 
 {% block body %}
 
-<div class="container-xl bg-light p-5 border-top">
-
-    <div class="row mb-2">
-
-        <h2 class="text-muted fw-bold mb-4">Ma liste</h2>
-
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <strong>A bug's life</strong> a été ajouté à votre liste de favoris.
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+<section class="page-section page-section--tinted">
+    <div class="container-xl">
+        <div class="section-heading">
+            <span class="movie-card__type">Votre sélection</span>
+            <h1>Ma liste</h1>
+            <p>{{ favoriteMovies|length }} programme{{ favoriteMovies|length > 1 ? 's' : '' }} enregistré{{ favoriteMovies|length > 1 ? 's' : '' }}.</p>
         </div>
-
-        <div class="col-6">
-
-            <div class="row g-0 border rounded overflow-hidden flex-md-row mb-4 shadow-sm bg-white position-relative">
-                <div class="col-4 movie__poster"
-                    style="background-image: url(https://m.media-amazon.com/images/M/MV5BNThmZGY4NzgtMTM4OC00NzNkLWEwNmEtMjdhMGY5YTc1NDE4XkEyXkFqcGdeQXVyMTQxNzMzNDI@._V1_SX300.jpg);">
-                    <img src="{{ asset('images/poster-placeholder.png') }}" class="img-fluid">
-                    <!-- img src="https://m.media-amazon.com/images/M/MV5BNThmZGY4NzgtMTM4OC00NzNkLWEwNmEtMjdhMGY5YTc1NDE4XkEyXkFqcGdeQXVyMTQxNzMzNDI@._V1_SX300.jpg" class="img-fluid" -->
+        <div class="row g-4">
+            {% for movie in favoriteMovies %}
+                <div class="col-12 col-md-6 col-xl-4">
+                    <article class="row g-0 movie-card flex-md-row h-100 position-relative">
+                        <div class="col-4 movie__poster movie-card__poster" style="background-image: url('{{ movie.poster|e('html_attr') }}');">
+                            <img src="{{ asset('assets/images/poster-placeholder.png') }}" alt="Affiche de {{ movie.title }}">
+                        </div>
+                        <div class="col-8 movie-card__content">
+                            <span class="movie-card__type">{{ movie.type }}</span>
+                            <h2 class="h5 mt-2">{{ movie.title }}</h2>
+                            <div class="movie-card__meta">{{ movie.duration }} min</div>
+                            <div class="movie-card__meta rating mt-2"><i class="bi bi-star-fill"></i> {{ movie.rating|default('NC') }}<span>/5</span></div>
+                            <div class="d-flex gap-2 mt-3">
+                                <a href="{{ path('movie', {slug: movie.slug}) }}" class="btn btn-sm btn-outline-danger">Voir</a>
+                                <form method="post" action="{{ path('movie_favorite_remove', {slug: movie.slug}) }}">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('favorite_' ~ movie.id) }}">
+                                    <button class="btn btn-sm btn-outline-secondary" type="submit">Retirer</button>
+                                </form>
+                            </div>
+                        </div>
+                    </article>
                 </div>
-                <div class="col-8 p-4 d-flex flex-column position-static">
-                    <a href="" class="movie__favorite fs-1 my-2 mx-3 link-danger"><i
-                            class="bi bi-bookmark-x-fill"></i></a>
-                    <strong class="d-inline-block mb-2 text-primary">Film</strong>
-                    <h3 class="mb-1">A Bug's Life</h3>
-                    <div class="mb-1 text-muted">93 min</div>
-                    <a href="./show.html" class="fs-1 mt-3 text-danger align-self-start">
-                        <i class="bi bi-arrow-right-square"></i>
-                    </a>
+            {% else %}
+                <div class="empty-state">
+                    <i class="bi bi-bookmark-heart"></i>
+                    <h2>Votre liste est vide</h2>
+                    <p>Ajoutez les films et séries que vous voulez garder sous la main.</p>
+                    <a href="{{ path('movie_home') }}" class="btn btn-danger">Explorer le catalogue</a>
                 </div>
-            </div>
-
+            {% endfor %}
         </div>
-
-        <div class="col-6">
-
-            <div class="row g-0 border rounded overflow-hidden flex-md-row mb-4 shadow-sm bg-white position-relative">
-                <div class="col-4 movie__poster"
-                    style="background-image: url(https://m.media-amazon.com/images/M/MV5BYTRiNDQwYzAtMzVlZS00NTI5LWJjYjUtMzkwNTUzMWMxZTllXkEyXkFqcGdeQXVyNDIzMzcwNjc@._V1_SX300.jpg);">
-                    <!-- img src="https://m.media-amazon.com/images/M/MV5BYTRiNDQwYzAtMzVlZS00NTI5LWJjYjUtMzkwNTUzMWMxZTllXkEyXkFqcGdeQXVyNDIzMzcwNjc@._V1_SX300.jpg"
-                                class="img-fluid" -->
-                    <img src="{{ asset('images/poster-placeholder.png') }}" alt="">
-                </div>
-                <div class="col-8 p-4 d-flex flex-column position-static">
-                    <a href="" class="movie__favorite fs-1 my-2 mx-3 link-danger"><i
-                            class="bi bi-bookmark-x-fill"></i></a>
-                    <strong class="d-inline-block mb-2 text-success">Série</strong>
-                    <h4 class="mb-1">Game of Thrones</h4>
-                    <div class="mb-1 text-muted">52 min</div>
-                    <a href="" class="fs-1 mt-3 text-danger align-self-start">
-                        <i class="bi bi-arrow-right-square"></i>
-                    </a>
-
-                </div>
-            </div>
-        </div>
-
-        <div class="col-6">
-
-            <div class="row g-0 border rounded overflow-hidden flex-md-row mb-4 shadow-sm bg-white position-relative">
-                <div class="col-4 movie__poster"
-                    style="background-image: url(https://m.media-amazon.com/images/M/MV5BN2ZmYjg1YmItNWQ4OC00YWM0LWE0ZDktYThjOTZiZjhhN2Q2XkEyXkFqcGdeQXVyNjgxNTQ3Mjk@._V1_SX300.jpg);">
-                    <!-- img src="https://m.media-amazon.com/images/M/MV5BYTRiNDQwYzAtMzVlZS00NTI5LWJjYjUtMzkwNTUzMWMxZTllXkEyXkFqcGdeQXVyNDIzMzcwNjc@._V1_SX300.jpg"
-                                class="img-fluid" -->
-                    <img src="{{ asset('images/poster-placeholder.png') }}" alt="">
-                </div>
-                <div class="col-8 p-4 d-flex flex-column position-static">
-                    <a href="" class="movie__favorite fs-1 my-2 mx-3 link-danger"><i
-                            class="bi bi-bookmark-x-fill"></i></a>
-                    <strong class="d-inline-block mb-2 text-success">Série</strong>
-                    <h4 class="mb-1">Stranger Things</h4>
-                    <div class="mb-1 text-muted">50 min</div>
-                    <a href="" class="fs-1 mt-3 text-danger align-self-start">
-                        <i class="bi bi-arrow-right-square"></i>
-                    </a>
-
-                </div>
-            </div>
-        </div>
-
     </div>
-
-    <div class="col">
-        <a href="" class="btn btn-danger btn-sm" onclick="return confirm('Vider votre liste de favoris ?');">Vider la
-            liste</a>
-    </div>
-
-</div>
+</section>
 
 
 {% endblock %}

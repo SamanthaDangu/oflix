@@ -2,85 +2,54 @@
 
 namespace App\Controller\Front;
 
+use App\Entity\User;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Http\Attribute\CurrentUser;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
-/**
- * @Route(name="main_")
- */
+#[Route(name: 'main_')]
 class MainController extends AbstractController
 {
-
-    /*
-    private $session;
-
-    public function __construct(SessionInterface $session)
-    {
-        $this->session = $session;
-    }
-    */
-
     /**
-     * User favorites list
-     * 
-     * @Route("/favorites", name="favorites")
+     * Affiche les films et series ajoutes a la liste de l'utilisateur connecte.
      */
-    public function favorites()
+    #[Route('/favorites', name: 'favorites', methods: ['GET'])]
+    #[IsGranted('ROLE_USER')]
+    public function favorites(#[CurrentUser] User $user): Response
     {
-        return $this->render('front/main/favorites.html.twig');
+        return $this->render('front/main/favorites.html.twig', [
+            'favoriteMovies' => $user->getFavoriteMovies(),
+        ]);
     }
 
     /**
-     * changement de theme
-     * 
-     * @Route("/theme/toggle", name="theme_switcher")
-     *
+     * Bascule le theme de l'interface et revient sur la page precedente.
      */
-    public function themeSwitcher(SessionInterface $session): response
+    #[Route('/theme/toggle', name: 'theme_switcher', methods: ['POST'])]
+    public function themeSwitcher(SessionInterface $session, Request $request): Response
     {
-        // TODO déplacer dans le UserController
-
-        // j'ai besoin d'une classe gérée par le FW
-        // Cette classe je veux que le FW me l'instancie/crée en auto
-        // Pour cela j'utilise le principe d'injection de dépendance
-
-        // Mon code est dépendant d'une classe : SessionInterface
-        
-        //* Objectif pouvoir changer de theme
-        // stocker le nom du theme actif, et/ou passer à l'autre theme
-
-        // @link https://symfony.com/doc/5.4/components/http_foundation/sessions.html#attributes
-        // si il n'y a pas de clé 'theme' (c'est la première fois que je vois cette utilisateur)
-        if (!$session->has('theme')){
-            // je met la valeur par défaut : netflix
-            $session->set('theme', 'netflix');
+        if (!$this->isCsrfTokenValid('theme_switcher', (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Jeton CSRF invalide.');
         }
 
-        // anciennement $_SESSION['theme']
-        // fournit la valeur stocké pour la clé (theme)
-        $theme = $session->get('theme');
+        $theme = $session->get('theme', 'netflix');
 
-        // il existe une version raccourci pour à la afois tester si la clé existe 
-        // et nous DONNER une valeur par défaut si la clé n'existe pas
-        //! cela ne SET pas la valeur par défaut
-        // $theme = $session->get('theme', 'netflix');
-
-        // je change de theme suivant le theme actif
-        if ($theme === 'netflix'){
+        if ($theme === 'netflix') {
             $session->set('theme', 'allocine');
         } else {
             $session->set('theme', 'netflix');
         }
-        
-        // Qu'est ce que je veux afficher ?
-        // --> Quelle page HTML donc quel Twig ??
-        // --> Aucun en particulier, la page actuelle
-        // On a pas de solution pour la page actuelle, donc on va utiliser un subterfuge
-        // et redireger l'utilisateur sur la page home
 
-        // TODO UX redirect vers la page courante
+        $referer = $request->headers->get('referer');
+
+        if ($referer && str_starts_with($referer, $request->getSchemeAndHttpHost() . '/')) {
+            return $this->redirect($referer);
+        }
+
         return $this->redirectToRoute("movie_home");
     }
 }

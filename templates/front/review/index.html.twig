@@ -1,28 +1,48 @@
 {% extends "base.html.twig" %}
 
-{% block title %}Ajouter une critique{% endblock %}
+{% block title %}{{ isEditing ? 'Modifier ma critique' : 'Ajouter une critique' }} | O'flix{% endblock %}
 
 {% block body %}
 
-<div class="container pt-5">
-
-    <div class="row mb-2">
-
-        <div class="col">
-
-            <h1>Ajouter une critique</h1>
+<section class="page-section">
+<div class="container-xl">
+    <div class="review-layout">
+        <aside class="review-context">
+            <span class="stream-kicker">Votre avis compte</span>
+            <h1>Racontez-nous votre séance.</h1>
+            <div class="review-context__poster movie__poster" style="background-image: url('{{ movie.poster|e('html_attr') }}');">
+                <img src="{{ asset('assets/images/poster-placeholder.png') }}" alt="Affiche de {{ movie.title }}">
+            </div>
             <h2>{{ movie.title }}</h2>
-            {#
-            https://symfony.com/doc/5.4/form/form_customization.html    
-            #}
-            {{ form_start(formulaire, {attr: {novalidate: 'novalidate'}} ) }}
-                {{ form_widget(formulaire) }}
-                {# https://symfony.com/doc/current/best_practices.html#add-form-buttons-in-templates #}
-                <button class="btn btn-success" type="submit">Ajouter</button>
-            {{ form_end(formulaire)}}
+            <p>Votre critique aidera les autres membres à choisir leur prochaine histoire.</p>
+        </aside>
 
+        <div class="review-form-panel">
+            <div class="section-heading">
+                <span class="movie-card__type">{{ isEditing ? 'Modifier ma critique' : 'Nouvelle critique' }}</span>
+                <h2>Votre expérience</h2>
+                <p>Les champs marqués sont nécessaires pour publier votre avis.</p>
+            </div>
+
+            {{ form_start(formulaire, {attr: {class: 'review-form', novalidate: 'novalidate'}}) }}
+                {{ form_errors(formulaire) }}
+                <p class="review-form__identity"><i class="bi bi-person-check"></i> Avis publié avec le compte <strong>{{ app.user.displayName }}</strong></p>
+                {{ form_row(formulaire.rating) }}
+                {{ form_row(formulaire.content, {attr: {rows: 7, placeholder: 'Qu’avez-vous pensé de ce film ou de cette série ?'}}) }}
+                {{ form_row(formulaire.reactions) }}
+                {{ form_row(formulaire.watchedAt) }}
+                <button class="btn btn-danger review-form__submit" type="submit"><i class="bi bi-send"></i> {{ isEditing ? 'Mettre à jour ma critique' : 'Publier ma critique' }}</button>
+            {{ form_end(formulaire) }}
+
+            {% if isEditing %}
+                <form method="post" action="{{ path('movie_review_delete', {id: movie.id}) }}" class="mt-2" onsubmit="return confirm('Supprimer définitivement votre critique ?');">
+                    <input type="hidden" name="_token" value="{{ csrf_token('delete_review_' ~ review.id) }}">
+                    <button class="btn btn-outline-danger btn-sm" type="submit"><i class="bi bi-trash"></i> Supprimer ma critique</button>
+                </form>
+            {% endif %}
         </div>
     </div>
 </div>
+</section>
 
 {% endblock %} 

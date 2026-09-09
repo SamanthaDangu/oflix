@@ -16,32 +16,37 @@ class Review
     private $id;
 
     #[ORM\Column(type: 'string', length: 50)]
-    #[Assert\NotBlank]
+    #[Assert\NotBlank(message: 'Le nom d\'auteur est obligatoire.')]
     private $username;
 
     #[ORM\Column(type: 'string', length: 255)]
-    #[Assert\NotBlank]
-    #[Assert\Email(message: "The email '{{ value }}' is not valid")]
+    #[Assert\NotBlank(message: 'L\'adresse email est obligatoire.')]
+    #[Assert\Email(message: 'L\'adresse email "{{ value }}" n\'est pas valide.')]
     private $email;
 
     #[ORM\Column(type: 'text')]
-    #[Assert\NotBlank]
-    #[Assert\Length(min: 10)]
+    #[Assert\NotBlank(message: 'Votre critique ne peut pas être vide.')]
+    #[Assert\Length(min: 10, minMessage: 'Votre critique doit contenir au moins {{ limit }} caractères.')]
     private $content;
 
     #[ORM\Column(type: 'float')]
-    #[Assert\NotBlank]
+    #[Assert\NotBlank(message: 'Merci de choisir une note.')]
     private $rating;
 
     #[ORM\Column(type: 'json')]
     private $reactions = [];
 
     #[ORM\Column(type: 'datetime_immutable')]
-    #[Assert\NotBlank]
+    #[Assert\NotBlank(message: 'Merci de préciser la date de visionnage.')]
     private $watchedAt;
 
     #[ORM\ManyToOne(targetEntity: Movie::class, inversedBy: 'reviews')]
     private $movie;
+
+    // lien vers le compte auteur : permet de retrouver la critique meme si l'email du compte change
+    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    private ?User $user = null;
 
     public function getId(): ?int
     {
@@ -84,12 +89,12 @@ class Review
         return $this;
     }
 
-    public function getRating(): ?int
+    public function getRating(): ?float
     {
         return $this->rating;
     }
 
-    public function setRating(int $rating): self
+    public function setRating(float $rating): self
     {
         $this->rating = $rating;
 
@@ -113,7 +118,7 @@ class Review
         return $this->watchedAt;
     }
 
-    public function setWatchedAt(\DateTimeImmutable $watchedAt): self
+    public function setWatchedAt(?\DateTimeImmutable $watchedAt): self
     {
         $this->watchedAt = $watchedAt;
 
@@ -128,6 +133,18 @@ class Review
     public function setMovie(?Movie $movie): self
     {
         $this->movie = $movie;
+
+        return $this;
+    }
+
+    public function getUser(): ?User
+    {
+        return $this->user;
+    }
+
+    public function setUser(?User $user): self
+    {
+        $this->user = $user;
 
         return $this;
     }
