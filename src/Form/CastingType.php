@@ -7,10 +7,8 @@ use App\Entity\Casting;
 use App\Entity\Movie;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
-use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
-use Symfony\Component\Validator\Constraints\Positive;
 
 class CastingType extends AbstractType
 {
@@ -18,12 +16,6 @@ class CastingType extends AbstractType
     {
         $builder
             ->add('role')
-            ->add('creditOrder', IntegerType::class, [
-            'constraints' => [new Positive()],
-                'attr' => [
-                    'min' => 1
-                    ]
-            ])
             ->add('movie', EntityType::class, [
                 'class' => Movie::class,
                 'choice_label' => 'getSomethingForCastingForm'

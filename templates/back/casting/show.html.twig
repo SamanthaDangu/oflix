@@ -1,8 +1,8 @@
-{% extends 'back_base.html.twig' %}
+{% extends 'back/back_base.html.twig' %}
 
 {% block title %}Casting{% endblock %}
 
-{% block body %}
+{% block content %}
     <h1>Casting</h1>
 
     <table class="table">
@@ -14,10 +14,6 @@
             <tr>
                 <th>Role</th>
                 <td>{{ casting.role }}</td>
-            </tr>
-            <tr>
-                <th>CreditOrder</th>
-                <td>{{ casting.creditOrder }}</td>
             </tr>
         </tbody>
     </table>

@@ -13,29 +13,26 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
 /**
- * @Route("/back/casting")
+ * Gestion back-office des associations entre acteurs, films et roles.
  */
+#[Route('/back/casting')]
 class CastingController extends AbstractController
 {
-    /**
-     * @Route("/", name="back_casting_index", methods={"GET"})
-     */
+    #[Route('/', name: 'back_casting_index', methods: ['GET'])]
     public function index(CastingRepository $castingRepository): Response
     {
         return $this->render('back/casting/index.html.twig', [
             'castings' => $castingRepository->findAll(),
         ]);
     }
-    
+
     /**
-     * @Route("/movie/{id}", name="back_casting_index_by_movie", methods={"GET"})
+     * Liste les castings pour un film donne.
      */
+    #[Route('/movie/{id}', name: 'back_casting_index_by_movie', methods: ['GET'])]
     public function listByMovie(CastingRepository $castingRepository, Movie $movie): Response
     {
-
-        //$castings = $castingRepository->findAll();
-        $castings = $castingRepository->findBy(['movie'=>$movie]);
-
+        $castings = $castingRepository->findBy(['movie' => $movie]);
 
         return $this->render('back/casting/index.html.twig', [
             'castings' => $castings,
@@ -44,8 +41,9 @@ class CastingController extends AbstractController
 
 
     /**
-     * @Route("/new", name="back_casting_new", methods={"GET", "POST"})
+     * Cree une association entre un acteur, un film et le role interprete.
      */
+    #[Route('/new', name: 'back_casting_new', methods: ['GET', 'POST'])]
     public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
         $casting = new Casting();
@@ -53,24 +51,19 @@ class CastingController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            
-            // TODO Est ce que le créditOrder existe pas déjà ?
-
             $entityManager->persist($casting);
             $entityManager->flush();
 
             return $this->redirectToRoute('back_casting_index', [], Response::HTTP_SEE_OTHER);
         }
 
-        return $this->renderForm('back/casting/new.html.twig', [
+        return $this->render('back/casting/new.html.twig', [
             'casting' => $casting,
-            'form' => $form,
+            'form' => $form->createView(),
         ]);
     }
 
-    /**
-     * @Route("/{id}", name="back_casting_show", methods={"GET"})
-     */
+    #[Route('/{id}', name: 'back_casting_show', methods: ['GET'])]
     public function show(Casting $casting): Response
     {
         return $this->render('back/casting/show.html.twig', [
@@ -79,8 +72,9 @@ class CastingController extends AbstractController
     }
 
     /**
-     * @Route("/{id}/edit", name="back_casting_edit", methods={"GET", "POST"})
+     * Modifie une association de casting existante.
      */
+    #[Route('/{id}/edit', name: 'back_casting_edit', methods: ['GET', 'POST'])]
     public function edit(Request $request, Casting $casting, EntityManagerInterface $entityManager): Response
     {
         $form = $this->createForm(CastingType::class, $casting);
@@ -92,18 +86,16 @@ class CastingController extends AbstractController
             return $this->redirectToRoute('back_casting_index', [], Response::HTTP_SEE_OTHER);
         }
 
-        return $this->renderForm('back/casting/edit.html.twig', [
+        return $this->render('back/casting/edit.html.twig', [
             'casting' => $casting,
-            'form' => $form,
+            'form' => $form->createView(),
         ]);
     }
 
-    /**
-     * @Route("/{id}", name="back_casting_delete", methods={"POST"})
-     */
+    #[Route('/{id}', name: 'back_casting_delete', methods: ['POST'])]
     public function delete(Request $request, Casting $casting, EntityManagerInterface $entityManager): Response
     {
-        if ($this->isCsrfTokenValid('delete'.$casting->getId(), $request->request->get('_token'))) {
+        if ($this->isCsrfTokenValid('delete' . $casting->getId(), $request->request->get('_token'))) {
             $entityManager->remove($casting);
             $entityManager->flush();
         }

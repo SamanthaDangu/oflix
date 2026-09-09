@@ -4,7 +4,6 @@ namespace App\Entity;
 
 use App\Repository\CastingRepository;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: CastingRepository::class)]
 class Casting
@@ -16,10 +15,6 @@ class Casting
 
     #[ORM\Column(type: 'string', length: 255)]
     private $role;
-
-    #[ORM\Column(type: 'integer')]
-    #[Assert\Positive]
-    private $creditOrder;
 
     #[ORM\ManyToOne(targetEntity: Movie::class, inversedBy: 'castings')]
     #[ORM\JoinColumn(nullable: false)]
@@ -66,18 +61,6 @@ class Casting
     public function setActor(?Actor $actor): self
     {
         $this->actor = $actor;
-
-        return $this;
-    }
-
-    public function getCreditOrder(): ?int
-    {
-        return $this->creditOrder;
-    }
-
-    public function setCreditOrder(int $creditOrder): self
-    {
-        $this->creditOrder = $creditOrder;
 
         return $this;
     }

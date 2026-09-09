@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Casting;
+use App\Entity\Movie;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -19,32 +20,20 @@ class CastingRepository extends ServiceEntityRepository
         parent::__construct($registry, Casting::class);
     }
 
-    // /**
-    //  * @return Casting[] Returns an array of Casting objects
-    //  */
-    /*
-    public function findByExampleField($value)
+    /**
+     * Castings d'un film avec l'acteur charge en une seule requete (evite le N+1 sur casting.actor).
+     *
+     * @return Casting[]
+     */
+    public function findByMovieWithActor(Movie $movie): array
     {
-        return $this->createQueryBuilder('c')
-            ->andWhere('c.exampleField = :val')
-            ->setParameter('val', $value)
-            ->orderBy('c.id', 'ASC')
-            ->setMaxResults(10)
+        return $this->createQueryBuilder('casting')
+            ->addSelect('actor')
+            ->join('casting.actor', 'actor')
+            ->andWhere('casting.movie = :movie')
+            ->setParameter('movie', $movie)
+            ->orderBy('casting.id', 'ASC')
             ->getQuery()
-            ->getResult()
-        ;
+            ->getResult();
     }
-    */
-
-    /*
-    public function findOneBySomeField($value): ?Casting
-    {
-        return $this->createQueryBuilder('c')
-            ->andWhere('c.exampleField = :val')
-            ->setParameter('val', $value)
-            ->getQuery()
-            ->getOneOrNullResult()
-        ;
-    }
-    */
 }
