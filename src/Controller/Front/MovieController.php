@@ -3,78 +3,133 @@
 namespace App\Controller\Front;
 
 use App\Entity\Movie;
-use App\Entity\Review;
+use App\Entity\User;
 use App\Repository\CastingRepository;
 use App\Repository\MovieRepository;
 use App\Repository\ReviewRepository;
-use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\ORM\Exception\RepositoryException;
-use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Http\Attribute\CurrentUser;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 class MovieController extends AbstractController
 {
     /**
-     * * Display movie/serie
-     * 
-     * @param string $slug Slug of the movie to display
-     * 
-     * @Route("/movie/{slug}", name="movie")
+     * Affiche la fiche d'un film ou d'une serie avec les critiques associees.
+     *
+     * @param Movie $movie Film résolu depuis le slug
      */
-    public function show(Movie $movie, CastingRepository $castingRepo, ReviewRepository $reviewRepository): Response
+    #[Route('/movie/{slug}', name: 'movie', methods: ['GET'])]
+    public function show(Movie $movie, ReviewRepository $reviewRepository, CastingRepository $castingRepository): Response
     {
-        //$movie = $movieRepos->find($id);
-        // plus besoin de récupérer le Repository de Movie
-        // /!\ On a récupéré $movie via le ParamConverter depuis l'URL
+        $reviews = $reviewRepository->findBy(['movie' => $movie], ['id' => 'DESC']);
 
-        // On voit avec le dump que la propriété seasons n'est pas remplit 
-        //dump($movie);
-        
-        // je veux les casting d'un film en particulier : $id
-        // j'utilise le findBy pour faire un find avec un critère
-        // en SQL : movie_id = $id
-        // Je suis en objet/entité
-        // je dit donc : fait un filtre sur la propriété 'movie' de l'objet 'casting'
-        // la valeur de cette propriété doit être égale à un objet Movie
-        // je lui donne donc l'objet $movie pour faire le filtre
-        // $criteria : ['propriété' => valeur]
-        // $orderBy : ['propriété' => 'ASC/DESC']
-        $castingsFilterByMovie = $castingRepo->findBy(['movie' => $movie], ['creditOrder' => 'ASC']);
-        //dump($castingsFilterByMovie);
+        $user = $this->getUser();
+        $userReview = $user instanceof User
+            ? $reviewRepository->findOneBy(['movie' => $movie, 'user' => $user])
+            : null;
 
-
-        // Je vais chercher la dernière review du film
-        // ça me renvoit un tableau, même si j'ai demandé 1 résultat
-        $lastReviews = $reviewRepository->findBy(['movie' => $movie], ['id' => 'DESC'], 1);
-        //dump($lastReviews);
-        
-            return $this->render('front/movie/show.html.twig', [
-                'movie' => $movie,
-                'castingsFilterByMovie' => $castingsFilterByMovie,
-                'lastReviews' => $lastReviews
-            ]);
-    }
-    
-    /**
-     * show all movies
-     * @Route("/", name="movie_home")
-     * @Route("/movies", name="movies")
-     * @param MovieRepository $repository
-     * @return Response
-     */
-    public function showAll(MovieRepository $repository): Response
-    {
-          $movies = $repository->findAll();
-          //$movies = $repository->findAllOrderedByTitle();
-          //$movies = $repository->findAllOrderedByTitleDQL();
-          //dump($movies);
-
-          return $this->render('front/movie/list.html.twig', [
-            'movies' => $movies
+        return $this->render('front/movie/show.html.twig', [
+            'movie' => $movie,
+            'reviews' => $reviews,
+            'userReview' => $userReview,
+            'castings' => $castingRepository->findByMovieWithActor($movie),
         ]);
     }
 
+    /**
+     * Affiche la home ou le catalogue, avec recherche quand le parametre search est fourni.
+     */
+    #[Route('/', name: 'movie_home', methods: ['GET'])]
+    #[Route('/catalogue', name: 'catalogue', methods: ['GET'])]
+    public function showAll(MovieRepository $repository, Request $request): Response
+    {
+        $isHome = $request->attributes->get('_route') === 'movie_home';
+
+        if ($isHome) {
+            $featuredMovies = $repository->findTopRated(8);
+
+            return $this->render('front/movie/list.html.twig', [
+                'movies' => [],
+                'heroMovie' => $featuredMovies[0] ?? null,
+                'featuredMovies' => $featuredMovies,
+                'films' => $repository->findByType('Film'),
+                'series' => $repository->findByType('Série'),
+                'isHome' => true,
+                'pageTitle' => null,
+                'searchQuery' => '',
+            ]);
+        }
+
+        $searchQuery = trim((string) $request->query->get('search', ''));
+        $movies = $searchQuery !== ''
+            ? $repository->searchByTitleOrDescription($searchQuery)
+            : $repository->findAll();
+
+        return $this->render('front/movie/list.html.twig', [
+            'movies' => $movies,
+            'heroMovie' => null,
+            'featuredMovies' => [],
+            'films' => [],
+            'series' => [],
+            'isHome' => false,
+            'pageTitle' => $searchQuery !== '' ? 'Recherche' : 'Catalogue',
+            'searchQuery' => $searchQuery,
+        ]);
+    }
+
+    /**
+     * Affiche le catalogue filtre par type de programme.
+     */
+    #[Route('/films', name: 'films', methods: ['GET'])]
+    #[Route('/series', name: 'series', methods: ['GET'])]
+    public function showByType(MovieRepository $repository, Request $request): Response
+    {
+        $isFilmsPage = $request->attributes->get('_route') === 'films';
+        $type = $isFilmsPage ? 'Film' : 'Série';
+
+        return $this->render('front/movie/list.html.twig', [
+            'movies' => $repository->findByType($type),
+            'pageTitle' => $isFilmsPage ? 'Films' : 'Séries',
+            'heroMovie' => null,
+            'featuredMovies' => [],
+            'films' => [],
+            'series' => [],
+            'isHome' => false,
+            'searchQuery' => '',
+        ]);
+    }
+
+    #[Route('/movie/{slug}/favorite', name: 'movie_favorite_add', methods: ['POST'])]
+    #[IsGranted('ROLE_USER')]
+    public function addFavorite(Movie $movie, Request $request, EntityManagerInterface $entityManager, #[CurrentUser] User $user): Response
+    {
+        if (!$this->isCsrfTokenValid('favorite_' . $movie->getId(), (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Jeton CSRF invalide.');
+        }
+
+        $user->addFavoriteMovie($movie);
+        $entityManager->flush();
+        $this->addFlash('success', sprintf('%s a été ajouté à votre liste.', $movie->getTitle()));
+
+        return $this->redirectToRoute('movie', ['slug' => $movie->getSlug()]);
+    }
+
+    #[Route('/movie/{slug}/favorite/remove', name: 'movie_favorite_remove', methods: ['POST'])]
+    #[IsGranted('ROLE_USER')]
+    public function removeFavorite(Movie $movie, Request $request, EntityManagerInterface $entityManager, #[CurrentUser] User $user): Response
+    {
+        if (!$this->isCsrfTokenValid('favorite_' . $movie->getId(), (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Jeton CSRF invalide.');
+        }
+
+        $user->removeFavoriteMovie($movie);
+        $entityManager->flush();
+        $this->addFlash('success', sprintf('%s a été retiré de votre liste.', $movie->getTitle()));
+
+        return $this->redirectToRoute('movie', ['slug' => $movie->getSlug()]);
+    }
 }

@@ -1,36 +1,79 @@
 {% extends "base.html.twig" %}
 
 {% block title %}O'flix - {{ movie.title }}{% endblock %}
+{% block meta_description %}{{ movie.summary|striptags|slice(0, 155) }}{% endblock %}
+{% block og_type %}video.movie{% endblock %}
+{% block og_title %}{{ movie.title }} | O'flix{% endblock %}
+{% block og_image %}{{ movie.poster }}{% endblock %}
 
 {% block body %}
 <!-- main -->
 
-    <div class="container bg-lighttt pt-5">
+    {% set genreNames = [] %}
+    {% for genre in movie.genres %}
+        {% set genreNames = genreNames|merge([genre.name]) %}
+    {% endfor %}
+    {% set jsonLd = {
+        '@context': 'https://schema.org',
+        '@type': 'Movie',
+        'name': movie.title,
+        'image': movie.poster,
+        'description': movie.summary|striptags,
+        'genre': genreNames,
+        'duration': 'PT' ~ movie.duration ~ 'M',
+    } %}
+    {% if movie.releaseDate %}
+        {% set jsonLd = jsonLd|merge({'dateCreated': movie.releaseDate|date('Y-m-d')}) %}
+    {% endif %}
+    {% if movie.rating and reviews is not empty %}
+        {% set jsonLd = jsonLd|merge({'aggregateRating': {
+            '@type': 'AggregateRating',
+            'ratingValue': movie.rating,
+            'bestRating': 5,
+            'ratingCount': reviews|length,
+        }}) %}
+    {% endif %}
+    <script type="application/ld+json">{{ jsonLd|json_encode|raw }}</script>
+
+    <section class="page-section">
+    <div class="container-xl">
 
         <div class="row mb-2">
 
             <div class="col">
 
-                <div
-                    class="row g-0 borderrr rrrounded overflow-hidden flex-md-row align-items-start mb-4 shadow-smmm position-relative">
-                    <div class="col-4 movie__poster img-thumbnail"
-                        style="background-image: url({{ movie.poster }});">
-                        <img src="{{ asset('assets/images/poster-placeholder.png') }}" class="img-fluid">
-                        <!-- img src="https://m.media-amazon.com/images/M/MV5BNThmZGY4NzgtMTM4OC00NzNkLWEwNmEtMjdhMGY5YTc1NDE4XkEyXkFqcGdeQXVyMTQxNzMzNDI@._V1_SX300.jpg" class="img-fluid" -->
+                <div class="row g-0 movie-detail flex-md-row align-items-start mb-4 position-relative">
+                    <div class="col-12 col-md-4 movie__poster movie-detail__poster"
+                        style="background-image: url('{{ movie.poster|e('html_attr') }}');">
+                        <img src="{{ movie.poster }}" alt="Affiche de {{ movie.title }}" class="img-fluid">
                     </div>
 
-                    <div class="col-8 p-4 d-flex flex-column position-static bg-light">
-                        <a href="" class="movie__favorite fs-1 my-2 mx-3 link-danger"><i class="bi bi-bookmark-plus"></i></a>
-                        <strong class="d-inline-block mb-2 text-primary">{{ movie.type }}</strong>
-                        <h3 class="mb-1">{{ movie.title }}</h3>
-                        <div class="mb-1 text-muted">{{ movie.duration }} min</div>
+                    <div class="col-12 col-md-8 d-flex flex-column position-static movie-detail__content">
+                        {% if app.user %}
+                            {% if app.user.hasFavoriteMovie(movie) %}
+                                <form method="post" action="{{ path('movie_favorite_remove', {slug: movie.slug}) }}" class="movie__favorite">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('favorite_' ~ movie.id) }}">
+                                    <button type="submit" class="btn btn-link p-0 fs-4" aria-label="Retirer {{ movie.title }} de ma liste"><i class="bi bi-bookmark-check-fill"></i></button>
+                                </form>
+                            {% else %}
+                                <form method="post" action="{{ path('movie_favorite_add', {slug: movie.slug}) }}" class="movie__favorite">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('favorite_' ~ movie.id) }}">
+                                    <button type="submit" class="btn btn-link p-0 fs-4" aria-label="Ajouter {{ movie.title }} à ma liste"><i class="bi bi-bookmark-plus"></i></button>
+                                </form>
+                            {% endif %}
+                        {% else %}
+                            <a href="{{ path('app_login') }}" class="movie__favorite" aria-label="Connectez-vous pour ajouter {{ movie.title }} à ma liste"><i class="bi bi-bookmark-plus"></i></a>
+                        {% endif %}
+                        <span class="movie-card__type mb-2">{{ movie.type }}</span>
+                        <h1 class="mb-2">{{ movie.title }}</h1>
+                        <div class="movie-card__meta mb-3">{{ movie.duration }} min</div>
                         <p>
                             {% for genre in movie.genres %}
                                 <span class="badge bg-warning text-dark">{{ genre.name }}</span>
                             {% endfor %}
                         </p>
                         <p>{{ movie.summary }}</p>
-                        <div class="d-flex" style="color: orange;">
+                        <div class="d-flex rating">
                         {% for i in range(0, 4) %}
                             {% set starClass = movie.rating - i >= 1 ? '-fill' : (movie.rating - i >= 0.5 ? '-half' : '') %}
                             <span class="bi bi-star{{ starClass }}"></span>
@@ -49,55 +92,11 @@
                         <dl class="row">
                             <dt class="col-sm-12">Avec</dt>
                             <dd class="col-sm-12">
-                                {# version en utilisant les relations et le lazy, mais sans tri #}
-                                {% for casting in movie.castings %}
-                                    {{ casting.actor.firstname }} {{ casting.actor.lastname }} ({{ casting.role }}) (creditOrder : {{casting.creditOrder}})<br>
+                                {% for casting in castings %}
+                                    {{ casting.actor.firstname }} {{ casting.actor.lastname }} ({{ casting.role }})<br>
                                 {% else %}
                                     <em>pas d'acteurs</em><br>
-                                {% endfor %} 
-                            </dd>
-                            <dt class="col-sm-12">Avec (depuis controller)</dt>
-                            <dd class="col-sm-12">
-                                {# version en utilisant les castings récuperé à la main dans le controller avec le tri #}
-                                {% for casting in castingsFilterByMovie %}
-                                    {{ casting.actor.firstname }} {{ casting.actor.lastname }} ({{ casting.role }}) (creditOrder : {{casting.creditOrder}})<br>
-                                {% else %}
-                                    <em>pas d'acteurs</em><br>
-                                {% endfor %} 
-                            </dd>
-                            <dt class="col-sm-12">Avec (sort dans twig)</dt>
-                            <dd class="col-sm-12">
-                                {# version en utilisant les relations et le lazy, mais sans tri #}
-                                {# https://twig.symfony.com/doc/2.x/filters/sort.html #}
-                                {#
-                                    sort((param1, param2) => param1.creditOrder <=> param2.creditOrder )
-                                    
-                                    sort() ==> je demande à twig de trier le tableau avant de faire la boucle for
-                                    
-                                    il existe plusieurs algorithme pour trier des données
-                                    le plus simple est de comparer les valeurs les unes entre les autres
-                                    et de décider à chaque fois l'ordre de tri entre ces deux valeurs
-                                    l'algo va parcourir toute la liste et faire le tri
-                                    Pour cela on doit lui donner le système de comparaison
-                                    comme on a dit que l'on compare entre deux élements, on va lui donner
-                                    une function avec 2 paramètres
-                                        sort((param1, param2))
-                                    on va aussi implémenter cette fonction pour définir la comparaison
-                                        => param1.laPropriétéAComparer et param2.laPropriétéAComparer
-                                    
-                                        sort((param1, param2) => param1.laPropriétéAComparer <=> param2.laPropriétéAComparer )
-
-                                    pour faire des économies visuelle, on va utiliser plutot (a, b) pour les paramètres de la function
-                                    
-                                    cette function de tri sera éxecuté par twig au démarrage de la boucle,
-                                    on a donc pas accès à a ou b
-                                    la fonction de tri est un fonctionnement interne de twig
-                                #}
-                                {% for casting in movie.castings|sort((a,b) => a.creditOrder <=> b.creditOrder) %}
-                                    {{ casting.actor.firstname }} {{ casting.actor.lastname }} ({{ casting.role }}) (creditOrder : {{casting.creditOrder}})<br>
-                                {% else %}
-                                    <em>pas d'acteurs</em><br>
-                                {% endfor %} 
+                                {% endfor %}
                             </dd>
                             <dt class="col-sm-12">Pays</dt>
                             <dd class="col-sm-12">USA</dd>
@@ -110,36 +109,63 @@
                 </div>
 
             </div>
-            {% for lastReview in lastReviews %}
-            <div class="row">
-                <div class="card" style="width: 18rem;">
-                    <div class="card-body">
-                      <h5 class="card-title">Dernière Critique :</h5>
-                      {% if lastReview.rating > 0 %}
-                            <div class="d-flex" style="color: orange;">
-                                {% set k = lastReview.rating %}
-                                {% for i in range(1, lastReview.rating|round(0, 'floor')) %}
-                                    <i class="bi bi-star-fill"></i>
-                                    {% set k = k-1 %}
-                                {% endfor %}
-                                {% if k > 0 %}
-                                <i class="bi bi-star-half"></i>
-                                {% endif %}
-                                <span class="ps-1">{{ lastReview.rating }}</span>
-                            </div>
-                        {% endif %}
-                      <h6 class="card-subtitle mb-2 text-muted">de {{ lastReview.username }} vu le {{ lastReview.watchedAt|date('d/m/y') }}</h6>
-                      <p class="card-text">{{ lastReview.content }}</p>
+            <div class="col-12">
+                <div class="section-heading mt-4">
+                    <span class="movie-card__type">Avis des spectateurs</span>
+                    {% if reviews is not empty %}
+                        <h2>{{ reviews|length }} critique{{ reviews|length > 1 ? 's' : '' }}</h2>
+                    {% endif %}
+                </div>
+
+                {% if userReview %}
+                    <div class="d-flex gap-2 mb-2">
+                        <a class="btn btn-sm btn-outline-danger" href="{{ path('movie_review_add', {id: movie.id}) }}"><i class="bi bi-pencil"></i> Modifier ma critique</a>
+                        <form method="post" action="{{ path('movie_review_delete', {id: movie.id}) }}" onsubmit="return confirm('Supprimer définitivement votre critique ?');">
+                            <input type="hidden" name="_token" value="{{ csrf_token('delete_review_' ~ userReview.id) }}">
+                            <button class="btn btn-sm btn-outline-secondary" type="submit"><i class="bi bi-trash"></i> Supprimer</button>
+                        </form>
                     </div>
-                  </div>
+                {% else %}
+                    <p><a class="btn btn-sm btn-danger" href="{{ path('movie_review_add', {id: movie.id}) }}">Ajouter une critique</a></p>
+                {% endif %}
+
+                {% if reviews is empty %}
+                    <div class="empty-state">
+                        <i class="bi bi-chat-square-text"></i>
+                        <h2>Aucune critique pour l'instant</h2>
+                        <p>Soyez le premier ou la première à partager votre avis sur ce film.</p>
+                    </div>
+                {% else %}
+                    <div class="row g-3">
+                        {% for review in reviews %}
+                            <div class="col-12 col-md-6">
+                                <div class="card border-0 h-100">
+                                    <div class="card-body">
+                                        {% if review.rating > 0 %}
+                                            <div class="d-flex rating">
+                                                {% set k = review.rating %}
+                                                {% for i in range(1, review.rating|round(0, 'floor')) %}
+                                                    <i class="bi bi-star-fill"></i>
+                                                    {% set k = k - 1 %}
+                                                {% endfor %}
+                                                {% if k > 0 %}
+                                                    <i class="bi bi-star-half"></i>
+                                                {% endif %}
+                                                <span class="ps-1">{{ review.rating }}</span>
+                                            </div>
+                                        {% endif %}
+                                        <h6 class="card-subtitle my-2 text-muted">de {{ review.username }} vu le {{ review.watchedAt|date('d/m/y') }}</h6>
+                                        <p class="card-text">{{ review.content }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
             </div>
-            {% else %}
-                <div><em>pas de review</em></div>
-            {% endfor %}
-            <p><a class="btn btn-sm btn-warning" href="{{ path('movie_review_add', {id: movie.id}) }}">Ajouter une critique</a></p>
 
         </div>
 
     </div>
-    {# dump(movie) #}
+    </section>
 {% endblock %}

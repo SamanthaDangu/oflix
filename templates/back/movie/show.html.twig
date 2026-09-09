@@ -1,56 +1,37 @@
-{% extends 'base.html.twig' %}
+{% extends 'back/back_base.html.twig' %}
 
-{% block title %}Movie{% endblock %}
+{% block title %}{{ movie.title }} | Back-office{% endblock %}
 
-{% block body %}
-    <h1>Movie</h1>
+{% block title_admin %}Film{% endblock %}
 
-    <table class="table">
-        <tbody>
-            <tr>
-                <th>Id</th>
-                <td>{{ movie.id }}</td>
-            </tr>
-            <tr>
-                <th>Title</th>
-                <td>{{ movie.title }}</td>
-            </tr>
-            <tr>
-                <th>ReleaseDate</th>
-                <td>{{ movie.releaseDate ? movie.releaseDate|date('Y-m-d') : '' }}</td>
-            </tr>
-            <tr>
-                <th>Duration</th>
-                <td>{{ movie.duration }}</td>
-            </tr>
-            <tr>
-                <th>Type</th>
-                <td>{{ movie.type }}</td>
-            </tr>
-            <tr>
-                <th>Synopsis</th>
-                <td>{{ movie.synopsis }}</td>
-            </tr>
-            <tr>
-                <th>Summary</th>
-                <td>{{ movie.summary }}</td>
-            </tr>
-            <tr>
-                <th>Rating</th>
-                <td>{{ movie.rating }}</td>
-            </tr>
-            <tr>
-                <th>Poster</th>
-                <td>{{ movie.poster }}</td>
-            </tr>
-        </tbody>
-    </table>
+{% block content %}
+    <div class="admin-card">
+        <div class="admin-card__head">
+            <div>
+                <h2 class="h5 mb-1">{{ movie.title }}</h2>
+                <p class="text-muted mb-0">{{ movie.type }} · {{ movie.duration }} min · {{ movie.releaseDate ? movie.releaseDate|date('d/m/Y') : '' }}</p>
+            </div>
+            <div>
+                <a href="{{ path('back_movie_edit', {'id': movie.id}) }}" class="btn btn-sm btn-outline-secondary">Modifier</a>
+                <a href="{{ path('back_casting_index_by_movie', {'id': movie.id}) }}" class="btn btn-sm btn-outline-warning">Casting</a>
+                {{ include('back/movie/_delete_form.html.twig') }}
+            </div>
+        </div>
 
-    <a href="{{ path('back_movie_index') }}">back to list</a>
-
-    {% if is_granted('ROLE_ADMIN') %}
-        <a href="{{ path('back_movie_edit', {'id': movie.id}) }}" class="btn btn-primary">edit</a>
-    {% endif %}
-    
-    {{ include('back/movie/_delete_form.html.twig') }}
+        <div class="row g-4">
+            <div class="col-md-4">
+                <img src="{{ movie.poster }}" alt="{{ movie.title }}" class="img-fluid rounded">
+            </div>
+            <div class="col-md-8">
+                <dl class="row">
+                    <dt class="col-sm-3">Résumé</dt>
+                    <dd class="col-sm-9">{{ movie.summary }}</dd>
+                    <dt class="col-sm-3">Synopsis</dt>
+                    <dd class="col-sm-9">{{ movie.synopsis }}</dd>
+                    <dt class="col-sm-3">Note</dt>
+                    <dd class="col-sm-9">{{ movie.rating|default('NC') }}/5</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
 {% endblock %}
