@@ -5,6 +5,16 @@
         <!-- Required meta tags -->
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="{% block meta_description %}O'flix vous aide à choisir vos prochains films et séries grâce à un catalogue de recommandations, fiches détaillées et avis de spectateurs.{% endblock %}">
+        <meta name="robots" content="{% block meta_robots %}index,follow{% endblock %}">
+        <link rel="canonical" href="{% block canonical_url %}{{ app.request.schemeAndHttpHost }}{{ app.request.pathInfo }}{% endblock %}">
+        <meta property="og:site_name" content="O'flix">
+        <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+        <meta property="og:title" content="{% block og_title %}{{ block('title') }}{% endblock %}">
+        <meta property="og:description" content="{% block og_description %}{{ block('meta_description') }}{% endblock %}">
+        <meta property="og:url" content="{{ block('canonical_url') }}">
+        <meta property="og:image" content="{% block og_image %}{{ absolute_url(asset('assets/favicon.png')) }}{% endblock %}">
+        <meta name="twitter:card" content="summary_large_image">
 
         <!-- Bootstrap CSS -->
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet"
@@ -25,15 +35,10 @@
         {# Run `composer require symfony/webpack-encore-bundle` to start using Symfony UX #}
         
     </head>
-    <body>
-        <!-- Nav -->
-    {% if app.session.get('theme', 'netflix') == 'netflix' %}
-        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    {% else %}
-        <nav class="navbar navbar-expand-lg navbar-light bg-warning">
-    {% endif %}
-        <div class="container-fluid">
-            <a href="{{ path('movie_home') }}" class="d-flex align-items-center mb-2 mb-lg-0 text-white text-decoration-none header-logo">
+    <body class="app-shell app-shell--{{ app.session.get('theme', 'netflix') }}">
+    <nav class="navbar navbar-expand-lg navbar-dark site-nav">
+        <div class="container-xl">
+            <a href="{{ path('movie_home') }}" class="d-flex align-items-center text-decoration-none header-logo">
                 <img src="{{ asset('assets/favicon.png') }}" height="24" alt="Logo O'flix">
                 <span class="header-logo__title">O'flix</span>
             </a>
@@ -42,73 +47,92 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <ul class="navbar-nav me-auto mb-3 mb-lg-0">
                     <li class="nav-item">
-                        <a class="nav-link active" href="{{ path('movie_home') }}">Accueil</a>
+                        <a class="nav-link" href="{{ path('movie_home') }}"><i class="bi bi-house-door"></i> Accueil</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ path('movies') }}"><i class="bi bi-film"></i> Films, séries TV</a>
+                        <a class="nav-link" href="{{ path('catalogue') }}"><i class="bi bi-grid-3x3-gap"></i> Catalogue</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ path('main_favorites') }}"><i class="bi bi-bookmark"></i> Ma liste</a>
+                        <a class="nav-link" href="{{ path('films') }}"><i class="bi bi-film"></i> Films</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ path('series') }}"><i class="bi bi-tv"></i> Séries</a>
+                    </li>
+                    {% if app.user %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ path('main_favorites') }}"><i class="bi bi-bookmark"></i> Ma liste</a>
+                        </li>
+                    {% endif %}
                 </ul>
                 {% if app.user != null %}
                     <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
                                 data-bs-toggle="dropdown">
-                                <span>{{ app.user.email }} ( {{ app.user.displayRole }} ) </span>
+                                <span>{{ app.user.displayName }} ( {{ app.user.displayRole }} ) </span>
                                 <i class="bi bi-person-square"></i>
                             </a>
                             <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="#">Profil</a></li>
-                                <li><a class="dropdown-item" href="{{ path('back_movie_index') }}">Backoffice</a></li>
+                                <li><a class="dropdown-item" href="{{ path('app_profile') }}"><i class="bi bi-person-circle"></i> Profil</a></li>
+                                {% if is_granted('ROLE_MANAGER') %}
+                                    <li><a class="dropdown-item" href="{{ path('back_movie_index') }}"><i class="bi bi-gear"></i> Backoffice</a></li>
+                                {% endif %}
                                 <li>
                                     <hr class="dropdown-divider">
                                 </li>
-                                <li><a class="dropdown-item" href="{{ path('app_logout')}}">Déconnexion</a></li>
+                                <li><a class="dropdown-item" href="{{ path('app_logout')}}"><i class="bi bi-box-arrow-right"></i> Déconnexion</a></li>
                             </ul>
                         </li>
                     </ul>
                 {% else %}
-                    <a href="{{ path('app_login')}}" type="button" class="btn btn-danger me-2">Connexion</a>
+                    <a href="{{ path('app_register') }}" class="btn btn-link text-light me-2">Créer un compte</a>
+                    <a href="{{ path('app_login')}}" class="btn btn-danger me-2">Connexion</a>
                 {% endif %}
 
-                
-
-                <form class="d-flex" action="list.html">
-                    <input class="form-control form-control-sm me-2" name="search" type="search" placeholder="Rechercher...">
-                    <button class="btn btn-outline-danger" type="submit"><i class="bi bi-search"></i></button>
+                <form class="site-search" action="{{ path('catalogue') }}" method="get" role="search">
+                    <label class="visually-hidden" for="site-search-input">Rechercher un film ou une série</label>
+                    <input id="site-search-input" class="form-control" name="search" type="search" placeholder="Rechercher..." value="{{ app.request.query.get('search', '') }}">
+                    <button class="btn btn-outline-danger" type="submit" aria-label="Lancer la recherche"><i class="bi bi-search"></i></button>
                 </form>
             </div>
         </div>
     </nav>
-    <div id="broadcast_message"></div>
+    <div id="broadcast_message" class="container-xl">
+        {% for message in app.flashes('success') %}
+            <div class="alert alert-success mt-3" role="status">{{ message }}</div>
+        {% endfor %}
+        {% for message in app.flashes('error') %}
+            <div class="alert alert-danger mt-3" role="alert">{{ message }}</div>
+        {% endfor %}
+    </div>
+    <main class="site-main">
         {% block admin_nav %}{% endblock %}
         {% block body %}{% endblock %}
+    </main>
     {% if randomMovie is defined %}
-        <div class="text-center border-top pt-3">
-            <p>Un film au hasard : <a href="{{ path('movie', {slug: randomMovie.slug}) }}">{{ randomMovie.title }}</a></p>
+        <div class="random-movie container-xl">
+            <span>À découvrir au hasard</span>
+            <a href="{{ path('movie', {slug: randomMovie.slug}) }}">{{ randomMovie.title }}</a>
         </div>
     {% endif %}
-    <!-- footer -->
-    <footer class="container-fluid py-4 border-top text-center">
-        <span class="text-muted">O'flix made with &hearts; at O'clock !
-            {# Version Alexandre
-                <br><small>Thème :<a href="{{ path('main_theme_switcher') }}" class="link-secondary text-decoration-none"><i class="bi bi-toggle-on mx-1"></i>{{ app.session.get('theme') }}</a></small>
-            #}
-            <br><small>Thème :
-                <a href="{{ path('main_theme_switcher')}}" class="link-secondary text-decoration-none">
+    <footer class="site-footer">
+        <div class="container-xl d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+            <span>O'flix, une sélection pour vos prochaines séances.</span>
+            <small>Thème :</small>
+                <form action="{{ path('main_theme_switcher')}}" method="post" class="d-inline">
+                    <input type="hidden" name="_token" value="{{ csrf_token('theme_switcher') }}">
+                    <button type="submit" class="theme-switch text-decoration-none btn btn-link btn-sm p-0 align-baseline">
                     {# Attention avec la session, bien vérifier ce qui se passe la première fois qu'on arrive sur le site #}
                     {% if app.session.get('theme', 'netflix') == 'netflix' %}
                     Allociné <i class="bi bi-toggle-on mx-1"></i> Netflix
                     {% else %}
                     Allociné <i class="bi bi-toggle-off mx-1"></i> Netflix
                     {% endif %}    
-                </a>
-            </small>
-        </span>
+                    </button>
+                </form>
+        </div>
     </footer>
 
     <!-- Optional JavaScript; choose one of 
