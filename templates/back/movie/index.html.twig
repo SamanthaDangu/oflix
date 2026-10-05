@@ -5,13 +5,6 @@
 {% block title_admin %}Films et séries{% endblock %}
 
 {% block content %}
-    {% for message in app.flashes('notice-jb') %}
-        <div class="alert alert-success" role="status">{{ message }}</div>
-    {% endfor %}
-    {% for message in app.flashes('error') %}
-        <div class="alert alert-danger" role="alert">{{ message }}</div>
-    {% endfor %}
-
     <div class="admin-card">
         <div class="admin-card__head">
             <div>
@@ -38,7 +31,7 @@
                         <td>{{ movie.id }}</td>
                         <td>{{ movie.title }}</td>
                         <td>{{ movie.releaseDate ? movie.releaseDate|date('d/m/Y') : '' }}</td>
-                        <td>{{ movie.type }}</td>
+                        <td>{{ movie.type|movieTypeLabel }}</td>
                         <td class="text-end">
                             <a href="{{ path('back_movie_show', {'id': movie.id}) }}" class="btn btn-sm btn-outline-danger">Voir</a>
                             <a href="{{ path('back_movie_edit', {'id': movie.id}) }}" class="btn btn-sm btn-outline-secondary">Modifier</a>

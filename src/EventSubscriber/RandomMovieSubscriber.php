@@ -30,9 +30,9 @@ class RandomMovieSubscriber implements EventSubscriberInterface
             $controller = $controller[0];
         }
 
-        $nomController = get_class($controller);
+        $controllerName = get_class($controller);
 
-        if (strpos($nomController, 'App\Controller\Front') === false) {
+        if (strpos($controllerName, 'App\Controller\Front') === false) {
             return;
         }
 

@@ -6,11 +6,13 @@ use App\Entity\Actor;
 use App\Entity\Casting;
 use App\Entity\Genre;
 use App\Entity\Movie;
+use App\Entity\Platform;
 use App\Entity\Season;
 use App\Repository\ActorRepository;
 use App\Repository\CastingRepository;
 use App\Repository\GenreRepository;
 use App\Repository\MovieRepository;
+use App\Repository\PlatformRepository;
 use App\Repository\SeasonRepository;
 use App\Service\TmdbApi;
 use DateTime;
@@ -31,8 +33,8 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 class MoviesImportCommand extends Command
 {
     private const MEDIA_TYPES = [
-        'movie' => 'Film',
-        'tv' => 'Série',
+        'movie' => 'Movie',
+        'tv' => 'Series',
     ];
     private const LISTS = ['popular', 'top_rated'];
     private const MAX_CAST = 10;
@@ -55,6 +57,7 @@ class MoviesImportCommand extends Command
     private $actorRepository;
     private $castingRepository;
     private $seasonRepository;
+    private $platformRepository;
     private $tmdbApi;
 
     public function __construct(
@@ -64,6 +67,7 @@ class MoviesImportCommand extends Command
         ActorRepository $actorRepository,
         CastingRepository $castingRepository,
         SeasonRepository $seasonRepository,
+        PlatformRepository $platformRepository,
         TmdbApi $tmdbApi
     ) {
         $this->entityManager = $doctrine->getManager();
@@ -72,6 +76,7 @@ class MoviesImportCommand extends Command
         $this->actorRepository = $actorRepository;
         $this->castingRepository = $castingRepository;
         $this->seasonRepository = $seasonRepository;
+        $this->platformRepository = $platformRepository;
         $this->tmdbApi = $tmdbApi;
 
         parent::__construct();
@@ -97,6 +102,7 @@ class MoviesImportCommand extends Command
         $stats = ['created' => 0, 'updated' => 0, 'skipped' => 0];
         $genreCache = [];
         $actorCache = [];
+        $platformCache = [];
         $processedCount = 0;
 
         foreach (self::MEDIA_TYPES as $mediaType => $typeLabel) {
@@ -120,7 +126,7 @@ class MoviesImportCommand extends Command
                     continue;
                 }
 
-                if (!$this->importMovie($mediaType, $typeLabel, $tmdbId, $details, $genreCache, $actorCache, $stats)) {
+                if (!$this->importMovie($mediaType, $typeLabel, $tmdbId, $details, $genreCache, $actorCache, $platformCache, $stats)) {
                     continue;
                 }
 
@@ -222,7 +228,7 @@ class MoviesImportCommand extends Command
         return $ids ? implode('|', $ids) : null;
     }
 
-    private function importMovie(string $mediaType, string $typeLabel, int $tmdbId, array $details, array &$genreCache, array &$actorCache, array &$stats): bool
+    private function importMovie(string $mediaType, string $typeLabel, int $tmdbId, array $details, array &$genreCache, array &$actorCache, array &$platformCache, array &$stats): bool
     {
         $title = $mediaType === 'movie' ? ($details['title'] ?? null) : ($details['name'] ?? null);
         $releaseDateRaw = $mediaType === 'movie' ? ($details['release_date'] ?? null) : ($details['first_air_date'] ?? null);
@@ -253,12 +259,21 @@ class MoviesImportCommand extends Command
         $movie->setType($typeLabel);
         $movie->setSynopsis($details['overview'] ?? '');
         $movie->setSummary(!empty($details['tagline']) ? $details['tagline'] : mb_substr($details['overview'] ?? '', 0, 255));
-        $movie->setRating(isset($details['vote_average']) ? (float) $details['vote_average'] : null);
+        // TMDb note sur 10, l'app affiche des notes sur 5 (widget etoiles) : on convertit et on arrondit
+        // pour eviter d'afficher des valeurs brutes a 3 decimales (ex: 8.951).
+        $movie->setRating(isset($details['vote_average']) ? round(((float) $details['vote_average']) / 2, 1) : null);
         $movie->setPoster($posterUrl);
 
-        $duration = $mediaType === 'movie'
-            ? ($details['runtime'] ?? 0)
-            : ($details['episode_run_time'][0] ?? 0);
+        if ($mediaType === 'movie') {
+            $duration = $details['runtime'] ?? 0;
+        } else {
+            // episode_run_time est souvent vide sur les series recentes cote TMDb :
+            // on retombe sur la duree du dernier/prochain episode diffuse si besoin.
+            $duration = $details['episode_run_time'][0]
+                ?? $details['last_episode_to_air']['runtime']
+                ?? $details['next_episode_to_air']['runtime']
+                ?? 0;
+        }
         $movie->setDuration((int) $duration);
 
         foreach ($genres as $genreData) {
@@ -278,6 +293,8 @@ class MoviesImportCommand extends Command
             $movie->addGenre($genreCache[$genreName]);
         }
 
+        $this->importPlatforms($movie, $this->tmdbApi->extractWatchProviders($details), $platformCache);
+
         $this->entityManager->persist($movie);
 
         $this->importCasting($movie, $isNew, $details['credits']['cast'] ?? [], $actorCache);
@@ -292,13 +309,48 @@ class MoviesImportCommand extends Command
     }
 
     /**
+     * Synchronise les plateformes de streaming (abonnement, region France) associees au film :
+     * la disponibilite pouvant changer d'un import a l'autre, on repart a chaque fois de la
+     * liste renvoyee par TMDb plutot que de se contenter d'ajouter.
+     *
+     * @param array<int, array{provider_id: int, provider_name: string, logo_path: ?string}> $watchProviders
+     * @param array<int, Platform> $platformCache cle = tmdbId de la plateforme, partagee sur tout le run
+     */
+    private function importPlatforms(Movie $movie, array $watchProviders, array &$platformCache): void
+    {
+        $movie->getPlatforms()->clear();
+
+        foreach ($watchProviders as $watchProvider) {
+            $providerId = $watchProvider['provider_id'] ?? null;
+            $providerName = $watchProvider['provider_name'] ?? null;
+            if ($providerId === null || !$providerName) {
+                continue;
+            }
+
+            if (!isset($platformCache[$providerId])) {
+                $platform = $this->platformRepository->findOneBy(['tmdbId' => $providerId]);
+                if (!$platform) {
+                    $platform = new Platform();
+                    $platform->setTmdbId($providerId);
+                    $this->entityManager->persist($platform);
+                }
+                $platform->setName($providerName);
+                $platform->setLogo($this->tmdbApi->buildLogoUrl($watchProvider['logo_path'] ?? null));
+                $platformCache[$providerId] = $platform;
+            }
+
+            $movie->addPlatform($platformCache[$providerId]);
+        }
+    }
+
+    /**
      * @param array<string, Actor> $actorCache cle = "tmdb:<id>" ou "name:<prenom>|<nom>", partagee sur tout le run
      */
     private function importCasting(Movie $movie, bool $movieIsNew, array $cast, array &$actorCache): void
     {
         $existingActorIds = [];
         if (!$movieIsNew) {
-            foreach ($this->castingRepository->findBy(['movie' => $movie]) as $existingCasting) {
+            foreach ($this->castingRepository->findByMovieWithActor($movie) as $existingCasting) {
                 $existingActorIds[$existingCasting->getActor()->getId()] = true;
             }
         }
