@@ -7,8 +7,11 @@ use App\Entity\Actor;
 use App\Entity\Casting;
 use App\Entity\Genre;
 use App\Entity\Movie;
+use App\Entity\Platform;
+use App\Entity\Review;
 use App\Entity\Season;
 use App\Entity\User;
+use DateTimeImmutable;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
 use Faker\Factory as Faker;
@@ -37,7 +40,7 @@ class AppFixtures extends Fixture
 
         // tableau pour réutiliser les Genre plus tard
         $allGenreEntity = [];
-        $genresTexte = [
+        $genreLabels = [
             'Action',
             'Animation',
             'Aventure',
@@ -55,7 +58,7 @@ class AppFixtures extends Fixture
             'Thriller',
             'Western'
         ];
-        foreach ($genresTexte as $genreName) {
+        foreach ($genreLabels as $genreName) {
 
             // Nouveau genre
             $genre = new Genre();
@@ -82,6 +85,24 @@ class AppFixtures extends Fixture
             $manager->persist($actor);
         }
 
+        /************ Platform ************/
+        // memes plateformes de streaming (et tmdbId) que MoviesImportCommand::PROVIDERS
+        $allPlatformEntity = [];
+        $platformLabels = [
+            'Netflix' => 8,
+            'Prime Video' => 119,
+            'Disney+' => 337,
+            'Crunchyroll' => 283,
+        ];
+        foreach ($platformLabels as $platformName => $tmdbId) {
+            $platform = new Platform();
+            $platform->setName($platformName);
+            $platform->setTmdbId($tmdbId);
+
+            $allPlatformEntity[] = $platform;
+
+            $manager->persist($platform);
+        }
 
         /*************** Movie ******************/
         // tableau pour réutiliser les Movie plus tard (casting)
@@ -105,8 +126,8 @@ class AppFixtures extends Fixture
             $newMovie->setDuration(rand(30, 180));
 
             // rand(1, 2) => soit 1 soit 2
-            // si rand(1, 2) == 1 alors 'Film' sinon 'Série'
-            $type = rand(1, 2) == 1 ? 'Film' : 'Série';
+            // si rand(1, 2) == 1 alors 'Movie' sinon 'Series'
+            $type = rand(1, 2) == 1 ? 'Movie' : 'Series';
 
             $newMovie->setType($type);
             // https://fakerphp.github.io/formatters/date-and-time/#datetimebetween
@@ -119,7 +140,7 @@ class AppFixtures extends Fixture
             $newMovie->setPoster('https://picsum.photos/id/' . mt_rand(1, 100) . '/303/424');
 
             // je veux des saisons pour UNIQUEMENT les séries
-            if ($type == 'Série') {
+            if ($type == 'Series') {
                 $nbSeason = rand(1, 5); // entre 1 et 5
                 for ($j = 1; $j <= $nbSeason; $j++) //! si 0 saison on passe pas dans la boucle
                 {
@@ -144,6 +165,12 @@ class AppFixtures extends Fixture
             }
 
             $newMovie->setRating($faker->randomFloat(1, 0, 5));
+
+            /***** Ajout des plateformes de streaming *****/
+            for ($p = 1; $p <= mt_rand(1, 2); $p++) {
+                $randomPlatform = $allPlatformEntity[mt_rand(0, count($allPlatformEntity) - 1)];
+                $newMovie->addPlatform($randomPlatform);
+            }
 
             // je garde l'entity pour plus tard
             $allMovieEntity[] = $newMovie;
@@ -192,6 +219,7 @@ class AppFixtures extends Fixture
             ],
         ];
 
+        $allUserEntity = [];
         foreach ($users as $currentUser) {
             $newUser = new User();
             $newUser->setEmail($currentUser['login']);
@@ -204,7 +232,44 @@ class AppFixtures extends Fixture
             );
             $newUser->setPassword($hashedPassword);
 
+            $allUserEntity[] = $newUser;
+
             $manager->persist($newUser);
+        }
+
+        /************ Favoris *************/
+        // chaque utilisateur ajoute 2 a 4 films au hasard a sa liste
+        foreach ($allUserEntity as $user) {
+            for ($f = 1; $f <= mt_rand(2, 4); $f++) {
+                $randomMovie = $allMovieEntity[mt_rand(0, count($allMovieEntity) - 1)];
+                $user->addFavoriteMovie($randomMovie);
+            }
+        }
+
+        /************ Review **************/
+        // chaque utilisateur laisse une critique sur 1 a 3 films distincts
+        $reactionChoices = ['smile', 'cry', 'think', 'sleep', 'dream'];
+        foreach ($allUserEntity as $user) {
+            $reviewedMovieIds = [];
+            for ($r = 1; $r <= mt_rand(1, 3); $r++) {
+                $randomMovie = $allMovieEntity[mt_rand(0, count($allMovieEntity) - 1)];
+                if (isset($reviewedMovieIds[spl_object_id($randomMovie)])) {
+                    continue;
+                }
+                $reviewedMovieIds[spl_object_id($randomMovie)] = true;
+
+                $review = new Review();
+                $review->setMovie($randomMovie);
+                $review->setUser($user);
+                $review->setUsername($user->getDisplayName());
+                $review->setEmail($user->getEmail());
+                $review->setContent($faker->realText(150, 2));
+                $review->setRating((float) mt_rand(1, 5));
+                $review->setReactions((array) $faker->randomElements($reactionChoices, mt_rand(1, 2)));
+                $review->setWatchedAt(DateTimeImmutable::createFromMutable($faker->dateTimeBetween('-1years', 'now')));
+
+                $manager->persist($review);
+            }
         }
 
         $manager->flush();
