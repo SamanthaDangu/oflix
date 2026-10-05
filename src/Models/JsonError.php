@@ -33,34 +33,10 @@ class JsonError
     }
 
     /**
-     * Set the value of error
-     *
-     * @return  self
-     */
-    public function setError($error)
-    {
-        $this->error = $error;
-
-        return $this;
-    }
-
-    /**
      * Get the value of message
      */
     public function getMessage()
     {
         return $this->message;
-    }
-
-    /**
-     * Set the value of message
-     *
-     * @return  self
-     */
-    public function setMessage($message)
-    {
-        $this->message = $message;
-
-        return $this;
     }
 }
