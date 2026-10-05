@@ -1,13 +1,13 @@
 {% extends 'back/back_base.html.twig' %}
 
-{% block title %}Edit User{% endblock %}
+{% block title %}Modifier {{ user.email }} | Back-office{% endblock %}
+
+{% block title_admin %}Modifier {{ user.email }}{% endblock %}
 
 {% block content %}
-    <h1>Edit User</h1>
+    <div class="admin-card">
+        {{ include('back/_form.html.twig', {'button_label': 'Mettre à jour'}) }}
+    </div>
 
-    {{ include('back/user/_form.html.twig', {'button_label': 'Update'}) }}
-
-    <a href="{{ path('back_user_index') }}">back to list</a>
-
-    {{ include('back/user/_delete_form.html.twig') }}
+    {{ include('back/_delete_form.html.twig', {'delete_route': 'back_user_delete', 'entity_id': user.id}) }}
 {% endblock %}

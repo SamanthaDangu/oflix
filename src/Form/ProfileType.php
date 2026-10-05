@@ -6,7 +6,6 @@ use App\Entity\User;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
-use Symfony\Component\Form\Extension\Core\Type\RepeatedType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -30,9 +29,7 @@ class ProfileType extends AbstractType
                 'label' => 'Adresse email',
                 'constraints' => [new NotBlank(), new Email()],
             ])
-            ->add('newPassword', RepeatedType::class, [
-                'type' => PasswordType::class,
-                'mapped' => false,
+            ->add('newPassword', PasswordConfirmationType::class, [
                 'required' => false,
                 'first_options' => [
                     'label' => 'Nouveau mot de passe',
@@ -42,7 +39,6 @@ class ProfileType extends AbstractType
                     'label' => 'Confirmer le nouveau mot de passe',
                     'attr' => ['autocomplete' => 'new-password'],
                 ],
-                'invalid_message' => 'Les mots de passe doivent être identiques.',
             ])
             ->add('currentPassword', PasswordType::class, [
                 'label' => 'Mot de passe actuel',

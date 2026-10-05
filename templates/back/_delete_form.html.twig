@@ -1,0 +1,6 @@
+{% if is_granted('ROLE_ADMIN') %}
+<form method="post" action="{{ path(delete_route, {'id': entity_id}) }}" onsubmit="return confirm('Supprimer definitivement cet element ?');">
+    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ entity_id) }}">
+    <button class="btn btn-danger">Supprimer</button>
+</form>
+{% endif %}

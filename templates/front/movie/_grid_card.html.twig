@@ -1,0 +1,36 @@
+{#
+    Carte film/serie, en deux variantes visuelles partageant la meme structure :
+    - "catalogue" (defaut) : carte de grille (page catalogue/recherche)
+    - "stream" : carte de rail horizontal (page d'accueil)
+#}
+{% macro card(movie, variant = 'catalogue') %}
+    {% if variant == 'stream' %}
+        <article class="stream-card">
+            <a href="{{ path('movie', {slug: movie.slug}) }}" class="stream-card__link">
+                <div class="stream-card__poster movie__poster" style="background-image: url('{{ movie.poster|e('html_attr') }}');">
+                    <img src="{{ movie.poster }}" alt="Affiche de {{ movie.title }}" loading="lazy">
+                    <span class="stream-card__type">{{ movie.type|movieTypeLabel }}</span>
+                </div>
+                <div class="stream-card__info">
+                    <h3>{{ movie.title }}</h3>
+                    <span>{{ movie.duration ? movie.duration ~ ' min' : 'Durée NC' }}</span>
+                    <strong><i class="bi bi-star-fill"></i> {{ movie.rating|default('NC') }}</strong>
+                </div>
+            </a>
+        </article>
+    {% else %}
+        <a href="{{ path('movie', {slug: movie.slug}) }}" class="catalogue-card">
+            <div class="catalogue-card__poster" style="background-image: url('{{ movie.poster|e('html_attr') }}');">
+                <img src="{{ movie.poster }}" alt="Affiche de {{ movie.title }}" loading="lazy">
+                <span class="catalogue-card__badge">{{ movie.type|movieTypeLabel }}</span>
+            </div>
+            <div class="catalogue-card__body">
+                <h2>{{ movie.title }}</h2>
+                <div class="catalogue-card__meta">
+                    <span>{{ movie.duration ? movie.duration ~ ' min' : 'Durée NC' }}</span>
+                    <strong><i class="bi bi-star-fill"></i> {{ movie.rating|default('NC') }}</strong>
+                </div>
+            </div>
+        </a>
+    {% endif %}
+{% endmacro %}

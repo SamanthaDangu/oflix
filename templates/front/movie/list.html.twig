@@ -11,29 +11,14 @@
     {%- endif -%}
 {% endblock %}
 
-{% macro poster(movie) %}
-    <article class="stream-card">
-        <a href="{{ path('movie', {slug: movie.slug}) }}" class="stream-card__link">
-            <div class="stream-card__poster movie__poster" style="background-image: url('{{ movie.poster|e('html_attr') }}');">
-                <img src="{{ movie.poster }}" alt="Affiche de {{ movie.title }}" loading="lazy">
-                <span class="stream-card__type">{{ movie.type }}</span>
-            </div>
-            <div class="stream-card__info">
-                <h3>{{ movie.title }}</h3>
-                <span>{{ movie.duration }} min</span>
-                <strong><i class="bi bi-star-fill"></i> {{ movie.rating|default('NC') }}</strong>
-            </div>
-        </a>
-    </article>
-{% endmacro %}
-{% import _self as ui %}
+{% import 'front/movie/_grid_card.html.twig' as grid %}
 
 {% block body %}
 {% if not isHome %}
-<section class="page-section page-section--tinted">
+<section class="catalogue-page">
     <div class="container-xl">
-        <div class="section-heading">
-            <span class="movie-card__type">Catalogue O'flix</span>
+        <div class="catalogue-hero">
+            <span class="genre-kicker">Catalogue O'flix</span>
             <h1>{{ pageTitle }}</h1>
             <p>
                 {% if searchQuery is defined and searchQuery %}
@@ -43,28 +28,19 @@
                 {% endif %}
             </p>
         </div>
-        <div class="row g-4">
-            {% for movie in movies %}
-                <div class="col-12 col-sm-6 col-lg-4">
-                    <article class="row g-0 movie-card flex-md-row h-100 position-relative">
-                        <div class="col-4 movie__poster movie-card__poster" style="background-image: url('{{ movie.poster|e('html_attr') }}');">
-                            <img src="{{ movie.poster }}" alt="Affiche de {{ movie.title }}" loading="lazy">
-                        </div>
-                        <div class="col-8 movie-card__content">
-                            <span class="movie-card__type">{{ movie.type }}</span>
-                            <h3 class="h5 mt-2">{{ movie.title }}</h3>
-                            <div class="movie-card__meta">{{ movie.duration }} min</div>
-                            <div class="movie-card__meta rating mt-2" aria-label="Note : {{ movie.rating|default('non communiquée') }} sur 5">
-                                <i class="bi bi-star-fill"></i> {{ movie.rating|default('NC') }}<span>/5</span>
-                            </div>
-                            <a href="{{ path('movie', {slug: movie.slug}) }}" class="btn btn-sm btn-outline-danger mt-3">Voir la fiche</a>
-                        </div>
-                    </article>
-                </div>
-            {% else %}
-                <p class="text-muted">Aucun programme dans cette catégorie.</p>
-            {% endfor %}
-        </div>
+
+        {% if movies is not empty %}
+            <div class="catalogue-grid">
+                {% for movie in movies %}
+                    {{ grid.card(movie) }}
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <i class="bi bi-film"></i>
+                <h2>Aucun programme dans cette catégorie.</h2>
+            </div>
+        {% endif %}
     </div>
 </section>
 {% else %}
@@ -74,10 +50,10 @@
             <div class="container-xl stream-hero__content">
                 <span class="stream-kicker">O'flix recommande</span>
                 <h1>{{ heroMovie.title }}</h1>
-                <p class="stream-hero__meta">{{ heroMovie.type }} <span>•</span> {{ heroMovie.duration }} min <span>•</span> <i class="bi bi-star-fill"></i> {{ heroMovie.rating|default('NC') }}</p>
+                <p class="stream-hero__meta">{{ heroMovie.type|movieTypeLabel }} {% if heroMovie.duration %}<span>•</span> {{ heroMovie.duration }} min {% endif %}<span>•</span> <i class="bi bi-star-fill"></i> {{ heroMovie.rating|default('NC') }}</p>
                 <p class="stream-hero__summary">{{ heroMovie.summary }}</p>
                 <div class="d-flex flex-wrap gap-2">
-                    <a href="{{ path('movie', {slug: heroMovie.slug}) }}" class="btn btn-light"><i class="bi bi-play-fill"></i> Voir la fiche</a>
+                    <a href="{{ path('movie', {slug: heroMovie.slug}) }}" class="btn btn-hero-primary"><i class="bi bi-play-fill"></i> Voir la fiche</a>
                     {% if app.user %}
                         <form action="{{ path('movie_favorite_add', {slug: heroMovie.slug}) }}" method="post">
                             <input type="hidden" name="_token" value="{{ csrf_token('favorite_' ~ heroMovie.id) }}">
@@ -93,16 +69,16 @@
 
     <section class="stream-rails container-xl">
         <div class="stream-heading"><div><span class="stream-kicker">À ne pas manquer</span><h2>À la une</h2></div><a href="{{ path('movie_home') }}">Tout voir <i class="bi bi-arrow-right"></i></a></div>
-        <div class="stream-rail">{% for movie in featuredMovies %}{{ ui.poster(movie) }}{% endfor %}</div>
+        <div class="stream-rail">{% for movie in featuredMovies %}{{ grid.card(movie, 'stream') }}{% endfor %}</div>
 
         {% if films %}
             <div class="stream-heading"><div><span class="stream-kicker">Grand écran</span><h2>Films</h2></div><a href="{{ path('films') }}">Tout voir <i class="bi bi-arrow-right"></i></a></div>
-            <div class="stream-rail">{% for movie in films %}{{ ui.poster(movie) }}{% endfor %}</div>
+            <div class="stream-rail">{% for movie in films %}{{ grid.card(movie, 'stream') }}{% endfor %}</div>
         {% endif %}
 
         {% if series %}
             <div class="stream-heading"><div><span class="stream-kicker">À suivre</span><h2>Séries</h2></div><a href="{{ path('series') }}">Tout voir <i class="bi bi-arrow-right"></i></a></div>
-            <div class="stream-rail">{% for movie in series %}{{ ui.poster(movie) }}{% endfor %}</div>
+            <div class="stream-rail">{% for movie in series %}{{ grid.card(movie, 'stream') }}{% endfor %}</div>
         {% endif %}
     </section>
 </div>

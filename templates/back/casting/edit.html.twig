@@ -1,13 +1,13 @@
 {% extends 'back/back_base.html.twig' %}
 
-{% block title %}Edit Casting{% endblock %}
+{% block title %}Modifier le casting | Back-office{% endblock %}
+
+{% block title_admin %}Modifier le casting{% endblock %}
 
 {% block content %}
-    <h1>Edit Casting</h1>
+    <div class="admin-card">
+        {{ include('back/_form.html.twig', {'button_label': 'Mettre à jour'}) }}
+    </div>
 
-    {{ include('back/casting/_form.html.twig', {'button_label': 'Update'}) }}
-
-    <a href="{{ path('back_casting_index') }}">back to list</a>
-
-    {{ include('back/casting/_delete_form.html.twig') }}
+    {{ include('back/_delete_form.html.twig', {'delete_route': 'back_casting_delete', 'entity_id': casting.id}) }}
 {% endblock %}

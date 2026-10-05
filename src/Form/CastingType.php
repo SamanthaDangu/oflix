@@ -18,7 +18,7 @@ class CastingType extends AbstractType
             ->add('role')
             ->add('movie', EntityType::class, [
                 'class' => Movie::class,
-                'choice_label' => 'getSomethingForCastingForm'
+                'choice_label' => fn (Movie $movie) => sprintf('%s (%d min.)', $movie->getTitle(), $movie->getDuration()),
             ])
             ->add('actor', EntityType::class, [
                 'class' => Actor::class,

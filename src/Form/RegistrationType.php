@@ -4,8 +4,6 @@ namespace App\Form;
 
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
-use Symfony\Component\Form\Extension\Core\Type\PasswordType;
-use Symfony\Component\Form\Extension\Core\Type\RepeatedType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -32,9 +30,7 @@ class RegistrationType extends AbstractType
                 'attr' => ['autocomplete' => 'email', 'placeholder' => 'vous@exemple.fr'],
                 'constraints' => [new NotBlank(), new Email()],
             ])
-            ->add('plainPassword', RepeatedType::class, [
-                'type' => PasswordType::class,
-                'mapped' => false,
+            ->add('plainPassword', PasswordConfirmationType::class, [
                 'first_options' => [
                     'label' => 'Mot de passe',
                     'attr' => ['autocomplete' => 'new-password'],
@@ -43,7 +39,6 @@ class RegistrationType extends AbstractType
                     'label' => 'Confirmer le mot de passe',
                     'attr' => ['autocomplete' => 'new-password'],
                 ],
-                'invalid_message' => 'Les mots de passe doivent être identiques.',
                 'constraints' => [
                     new NotBlank(),
                     PasswordPolicy::lengthConstraint(),

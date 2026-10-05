@@ -1,11 +1,11 @@
 {% extends 'back/back_base.html.twig' %}
 
-{% block title %}New Casting{% endblock %}
+{% block title %}Ajouter un casting | Back-office{% endblock %}
+
+{% block title_admin %}Nouveau casting{% endblock %}
 
 {% block content %}
-    <h1>Create new Casting</h1>
-
-    {{ include('back/casting/_form.html.twig') }}
-
-    <a href="{{ path('back_casting_index') }}">back to list</a>
+    <div class="admin-card">
+        {{ include('back/_form.html.twig') }}
+    </div>
 {% endblock %}
