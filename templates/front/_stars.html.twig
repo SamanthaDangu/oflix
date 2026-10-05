@@ -1,0 +1,9 @@
+{% macro rating(value, max = 5) %}
+    <div class="d-flex rating">
+        {% for i in range(0, max - 1) %}
+            {% set starClass = value - i >= 1 ? '-fill' : (value - i >= 0.5 ? '-half' : '') %}
+            <i class="bi bi-star{{ starClass }}"></i>
+        {% endfor %}
+        <span class="ps-1">{{ value }}</span>
+    </div>
+{% endmacro %}

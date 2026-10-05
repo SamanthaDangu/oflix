@@ -16,8 +16,8 @@ class TmdbApi
     private const BASE_URL = 'https://api.themoviedb.org/3';
     private const IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
 
-    private $httpClient;
-    private $parameterBag;
+    private HttpClientInterface $httpClient;
+    private ParameterBagInterface $parameterBag;
     private LoggerInterface $logger;
 
     public function __construct(HttpClientInterface $httpClient, ParameterBagInterface $parameterBag, LoggerInterface $logger)
@@ -63,13 +63,23 @@ class TmdbApi
     }
 
     /**
-     * Renvoie le detail complet d'un film/serie, casting inclus (et saisons pour les series).
-     *
-     * @param string $mediaType 'movie' ou 'tv'
+     * Renvoie le detail complet d'un film/serie, casting et plateformes de streaming inclus
+     * (et saisons pour les series).
      */
     public function fetchDetails(string $mediaType, int $id): ?array
     {
-        return $this->request("/{$mediaType}/{$id}", ['append_to_response' => 'credits']);
+        return $this->request("/{$mediaType}/{$id}", ['append_to_response' => 'credits,watch/providers']);
+    }
+
+    /**
+     * Renvoie les plateformes de streaming par abonnement (region France) sur lesquelles
+     * un film/serie est disponible, a partir du detail renvoye par fetchDetails().
+     *
+     * @return array Liste d'entrees ['provider_id' => int, 'provider_name' => string, 'logo_path' => ?string]
+     */
+    public function extractWatchProviders(array $details): array
+    {
+        return $details['watch/providers']['results']['FR']['flatrate'] ?? [];
     }
 
     /**
@@ -82,6 +92,18 @@ class TmdbApi
         }
 
         return self::IMAGE_BASE_URL . $posterPath;
+    }
+
+    /**
+     * Construit l'URL complete d'un logo (plateforme de streaming) a partir du logo_path renvoye par TMDb.
+     */
+    public function buildLogoUrl(?string $logoPath): ?string
+    {
+        if (!$logoPath) {
+            return null;
+        }
+
+        return self::IMAGE_BASE_URL . $logoPath;
     }
 
     private function request(string $path, array $query): ?array

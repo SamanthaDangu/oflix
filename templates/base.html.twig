@@ -38,64 +38,58 @@
     <body class="app-shell app-shell--{{ app.session.get('theme', 'netflix') }}">
     <nav class="navbar navbar-expand-lg navbar-dark site-nav">
         <div class="container-xl">
-            <a href="{{ path('movie_home') }}" class="d-flex align-items-center text-decoration-none header-logo">
-                <img src="{{ asset('assets/favicon.png') }}" height="24" alt="Logo O'flix">
-                <span class="header-logo__title">O'flix</span>
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                data-bs-target="#navbarSupportedContent">
+            <div class="d-flex align-items-center gap-3">
+                <a href="{{ path('movie_home') }}" class="d-flex align-items-center text-decoration-none header-logo">
+                    <img src="{{ asset('assets/favicon.png') }}" height="24" alt="Logo O'flix">
+                    <span class="header-logo__title">O'flix</span>
+                </a>
+            </div>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
+
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                <ul class="navbar-nav me-auto mb-3 mb-lg-0">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ path('movie_home') }}"><i class="bi bi-house-door"></i> Accueil</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ path('catalogue') }}"><i class="bi bi-grid-3x3-gap"></i> Catalogue</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ path('films') }}"><i class="bi bi-film"></i> Films</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ path('series') }}"><i class="bi bi-tv"></i> Séries</a>
-                    </li>
+                <ul class="navbar-nav mx-auto mb-2 mb-lg-0 nav-pills-group">
+                    <li class="nav-item"><a class="nav-link" href="{{ path('movie_home') }}"><i class="bi bi-house-door"></i> Accueil</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ path('catalogue') }}"><i class="bi bi-grid-3x3-gap"></i> Catalogue</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ path('films') }}"><i class="bi bi-film"></i> Films</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ path('series') }}"><i class="bi bi-tv"></i> Séries</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ path('genre_list') }}"><i class="bi bi-tags"></i> Genres</a></li>
                     {% if app.user %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ path('main_favorites') }}"><i class="bi bi-bookmark"></i> Ma liste</a>
-                        </li>
+                        <li class="nav-item"><a class="nav-link" href="{{ path('main_favorites') }}"><i class="bi bi-bookmark"></i> Ma liste</a></li>
                     {% endif %}
                 </ul>
-                {% if app.user != null %}
-                    <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
-                                data-bs-toggle="dropdown">
-                                <span>{{ app.user.displayName }} ( {{ app.user.displayRole }} ) </span>
-                                <i class="bi bi-person-square"></i>
+
+                <div class="d-flex align-items-center gap-2 ms-auto navbar-actions">
+                    <form class="site-search" action="{{ path('catalogue') }}" method="get" role="search">
+                        <label class="visually-hidden" for="site-search-input">Rechercher</label>
+                        <input id="site-search-input" class="form-control" name="search" type="search" placeholder="Rechercher..." value="{{ app.request.query.get('search', '') }}">
+                        <button class="btn btn-outline-danger" type="submit" aria-label="Lancer la recherche"><i class="bi bi-search"></i></button>
+                    </form>
+
+                    {% if app.user != null %}
+                        <div class="nav-item dropdown user-menu">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <span class="user-menu__name">{{ app.user.displayName }}</span>
+                                <i class="bi bi-person-circle"></i>
                             </a>
-                            <ul class="dropdown-menu">
+                            <ul class="dropdown-menu dropdown-menu-end">
                                 <li><a class="dropdown-item" href="{{ path('app_profile') }}"><i class="bi bi-person-circle"></i> Profil</a></li>
                                 {% if is_granted('ROLE_MANAGER') %}
                                     <li><a class="dropdown-item" href="{{ path('back_movie_index') }}"><i class="bi bi-gear"></i> Backoffice</a></li>
                                 {% endif %}
-                                <li>
-                                    <hr class="dropdown-divider">
-                                </li>
+                                <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item" href="{{ path('app_logout')}}"><i class="bi bi-box-arrow-right"></i> Déconnexion</a></li>
                             </ul>
-                        </li>
-                    </ul>
-                {% else %}
-                    <a href="{{ path('app_register') }}" class="btn btn-link text-light me-2">Créer un compte</a>
-                    <a href="{{ path('app_login')}}" class="btn btn-danger me-2">Connexion</a>
-                {% endif %}
-
-                <form class="site-search" action="{{ path('catalogue') }}" method="get" role="search">
-                    <label class="visually-hidden" for="site-search-input">Rechercher un film ou une série</label>
-                    <input id="site-search-input" class="form-control" name="search" type="search" placeholder="Rechercher..." value="{{ app.request.query.get('search', '') }}">
-                    <button class="btn btn-outline-danger" type="submit" aria-label="Lancer la recherche"><i class="bi bi-search"></i></button>
-                </form>
+                        </div>
+                    {% else %}
+                        <div class="d-flex align-items-center gap-2 auth-actions">
+                            <a href="{{ path('app_register') }}" class="btn btn-link text-light">Créer un compte</a>
+                            <a href="{{ path('app_login')}}" class="btn btn-danger">Connexion</a>
+                        </div>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </nav>

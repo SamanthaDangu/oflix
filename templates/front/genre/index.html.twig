@@ -3,28 +3,29 @@
 {% block title %}{{ genre.name }} | O'flix{% endblock %}
 {% block meta_description %}Découvrez les films et séries du genre {{ genre.name }} disponibles dans le catalogue O'flix.{% endblock %}
 
+{% import 'front/movie/_grid_card.html.twig' as grid %}
+
 {% block body %}
-<section class="page-section">
-<div class="container-xl">
-    <div class="section-heading">
-        <span class="movie-card__type">Collection</span>
-        <h1>{{ genre.name }}</h1>
-        <p>Les films associés à ce genre.</p>
-    </div>
-    <div class="row g-3">
-    {% for movie in genre.movies %}
-        <div class="col-12 col-md-6 col-xl-4">
-            <article class="movie-card p-3">
-                <span class="movie-card__type">{{ movie.type }}</span>
-                <h2 class="h4 mt-2 mb-1">{{ movie.title }}</h2>
-                <span class="movie-card__meta">{{ movie.duration }} min</span>
-                <a class="btn btn-sm btn-outline-danger mt-3" href="{{ path('movie', {slug: movie.slug}) }}">Voir le détail</a>
-            </article>
+<section class="genre-page genre-page--detail">
+    <div class="container-xl">
+        <div class="genre-hero genre-hero--detail">
+            <span class="genre-kicker">Collection</span>
+            <h1>{{ genre.name }}</h1>
+            <p>{{ genre.movies|length }} programme{{ genre.movies|length > 1 ? 's' : '' }} associé{{ genre.movies|length > 1 ? 's' : '' }} à ce genre.</p>
         </div>
-    {% else %}
-        <p class="text-muted">Aucun film dans cette collection.</p>
-    {% endfor %}
+
+        {% if genre.movies is not empty %}
+            <div class="genre-film-grid">
+                {% for movie in genre.movies %}
+                    {{ grid.card(movie) }}
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <i class="bi bi-film"></i>
+                <h2>Aucun film dans cette collection</h2>
+            </div>
+        {% endif %}
     </div>
-</div>
 </section>
 {% endblock %}

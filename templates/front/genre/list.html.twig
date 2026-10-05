@@ -1,0 +1,35 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Genres | O'flix{% endblock %}
+{% block meta_description %}Parcourez le catalogue O'flix par genre : films et séries classés par catégorie.{% endblock %}
+
+{% block body %}
+<section class="genre-page">
+    <div class="container-xl">
+        <div class="genre-hero">
+            <span class="genre-kicker">Catalogue</span>
+            <h1>Genres</h1>
+            <p>Parcourez les films et séries par ambiance, style et univers.</p>
+        </div>
+
+        {% if genres is not empty %}
+            <div class="genre-grid">
+                {% for genre in genres %}
+                    <a href="{{ path('genre', {slug: genre.slug}) }}" class="genre-link-card">
+                        <div class="genre-link-card__meta">
+                            <span>{{ genre.movies|length }} titre{{ genre.movies|length > 1 ? 's' : '' }}</span>
+                            <i class="bi bi-arrow-right-circle"></i>
+                        </div>
+                        <h2>{{ genre.name }}</h2>
+                    </a>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <i class="bi bi-tags"></i>
+                <h2>Aucun genre disponible</h2>
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

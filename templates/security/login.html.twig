@@ -9,7 +9,7 @@
 {% block auth_content %}
 	<form method="post" class="auth-form">
 		{% if error %}
-			<div class="alert alert-danger">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+			<div class="alert alert-danger">Identifiant ou mot de passe incorrect.</div>
 		{% endif %}
 
 		{% if app.user %}

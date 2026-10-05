@@ -1,0 +1,17 @@
+{% macro body(review) %}
+    {% import 'front/_stars.html.twig' as stars %}
+    {% if review.rating > 0 %}
+        {{ stars.rating(review.rating) }}
+    {% endif %}
+    <h6 class="card-subtitle my-2 text-muted">de {{ review.username }} vu le {{ review.watchedAt|date('d/m/y') }}</h6>
+    <p class="card-text">{{ review.content }}</p>
+    {% if review.reactions is not empty %}
+        <div class="review-reactions" aria-label="Ressenti de {{ review.username }}">
+            {% for reaction in review.reactions %}
+                <span class="review-reaction">
+                    {% if reaction == 'smile' %}😄 Rire{% elseif reaction == 'cry' %}🥲 Pleurer{% elseif reaction == 'think' %}🤔 Réfléchir{% elseif reaction == 'sleep' %}😴 Dormir{% elseif reaction == 'dream' %}✨ Rêver{% else %}{{ reaction }}{% endif %}
+                </span>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endmacro %}
