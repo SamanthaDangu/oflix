@@ -1,4 +1,5 @@
 {% extends 'security/_auth_layout.html.twig' %}
+{% import 'front/_review_card.html.twig' as reviewCard %}
 
 {% block title %}Mon profil | O'flix{% endblock %}
 
@@ -7,26 +8,91 @@
 {% block auth_subtitle %}Mettez à jour votre email ou votre mot de passe, ou supprimez définitivement votre compte.{% endblock %}
 
 {% block auth_content %}
-    <div class="auth-form">
-        {{ form_start(profile_form) }}
-            {{ form_errors(profile_form) }}
-            {{ form_row(profile_form.pseudo) }}
-            {{ form_row(profile_form.email) }}
-            {{ form_row(profile_form.newPassword.first) }}
-            <p class="form-hint">Laissez vide si vous ne souhaitez pas changer de mot de passe.</p>
-            {{ form_row(profile_form.newPassword.second) }}
-            {{ form_row(profile_form.currentPassword) }}
-            <button class="btn btn-danger w-100" type="submit">Enregistrer les modifications</button>
-        {{ form_end(profile_form) }}
+    <div class="profile-panel profile-panel--summary">
+        <div class="profile-summary">
+            <div class="profile-summary__content">
+                <span class="profile-summary__label">Mon compte</span>
+                <h2>{{ app.user.pseudo|default(app.user.email) }}</h2>
+                <p>{{ app.user.email }}</p>
 
-        <hr class="my-4">
+                <div class="profile-summary__meta">
+                    <span class="profile-summary__badge"><i class="bi bi-chat-square-text" aria-hidden="true"></i> Commentaires <strong>{{ reviews|length }}</strong></span>
+                    <span class="profile-summary__badge"><i class="bi bi-bookmark-heart" aria-hidden="true"></i> Favoris <strong>{{ app.user.favoriteMovies|length }}</strong></span>
+                </div>
+            </div>
+        </div>
 
-        <h2 class="h5">Supprimer mon compte</h2>
-        <p class="text-muted">Cette action est définitive et retirera vos favoris.</p>
-        <form method="post" action="{{ path('app_profile_delete') }}" onsubmit="return confirm('Supprimer définitivement votre compte ?');">
-            <input type="hidden" name="_token" value="{{ csrf_token('delete_account_' ~ app.user.id) }}">
-            <input type="password" name="confirm_password" class="form-control mb-2" placeholder="Confirmez votre mot de passe" required autocomplete="current-password">
-            <button type="submit" class="btn btn-outline-danger w-100">Supprimer mon compte</button>
-        </form>
+        <div class="profile-panel__footer">
+            <ul class="profile-tabs nav nav-tabs" id="profileTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="account-tab" data-bs-toggle="tab" data-bs-target="#account-pane" type="button" role="tab" aria-controls="account-pane" aria-selected="true">Mes informations</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="reviews-tab" data-bs-toggle="tab" data-bs-target="#reviews-pane" type="button" role="tab" aria-controls="reviews-pane" aria-selected="false">Mes commentaires</button>
+                </li>
+            </ul>
+        </div>
+
+        <div class="tab-content profile-tab-content" id="profileTabsContent">
+            <div class="tab-pane fade show active" id="account-pane" role="tabpanel" aria-labelledby="account-tab">
+                <div class="profile-card">
+                    <div class="auth-form auth-form--profile">
+                        {{ form_start(profile_form) }}
+                            {{ form_errors(profile_form) }}
+                            {{ form_row(profile_form.pseudo) }}
+                            {{ form_row(profile_form.email) }}
+                            {{ form_row(profile_form.newPassword.first) }}
+                            <p class="form-hint">Laissez vide si vous ne souhaitez pas changer de mot de passe.</p>
+                            {{ form_row(profile_form.newPassword.second) }}
+                            {{ form_row(profile_form.currentPassword) }}
+                            <button class="btn btn-danger w-100 profile-submit" type="submit">Enregistrer les modifications</button>
+                        {{ form_end(profile_form) }}
+                    </div>
+                </div>
+
+                <div class="profile-card profile-card--danger">
+                    <div class="profile-delete-header">
+                        <h3>Supprimer mon compte</h3>
+                        <p>Cette action est définitive et retirera vos favoris ainsi que vos avis.</p>
+                    </div>
+                    <form method="post" action="{{ path('app_profile_delete') }}" onsubmit="return confirm('Supprimer définitivement votre compte ?');">
+                        <input type="hidden" name="_token" value="{{ csrf_token('delete_account_' ~ app.user.id) }}">
+                        <input type="password" name="confirm_password" class="form-control mb-2" placeholder="Confirmez votre mot de passe" required autocomplete="current-password">
+                        <button type="submit" class="btn btn-outline-danger w-100">Supprimer mon compte</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="reviews-pane" role="tabpanel" aria-labelledby="reviews-tab">
+                {% if reviews is empty %}
+                    <div class="empty-state empty-state--profile">
+                        <i class="bi bi-chat-square-text"></i>
+                        <h2>Vous n'avez posté aucun commentaire</h2>
+                        <p>Vos critiques de films et séries apparaîtront ici.</p>
+                        <a href="{{ path('movie_home') }}" class="btn btn-danger">Explorer le catalogue</a>
+                    </div>
+                {% else %}
+                    <div class="row g-3 profile-reviews">
+                        {% for review in reviews %}
+                            <div class="col-12">
+                                <div class="card review-card border-0 h-100">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start gap-2 mb-1">
+                                            <a href="{{ path('movie', {slug: review.movie.slug}) }}" class="fw-bold text-decoration-none">{{ review.movie.title }}</a>
+                                            <a class="btn btn-sm btn-outline-danger" href="{{ path('movie_review_add', {slug: review.movie.slug}) }}" aria-label="Modifier ma critique de {{ review.movie.title }}"><i class="bi bi-pencil"></i></a>
+                                        </div>
+                                        {{ reviewCard.body(review) }}
+                                        <form method="post" action="{{ path('movie_review_delete', {slug: review.movie.slug}) }}" class="mt-2" onsubmit="return confirm('Supprimer définitivement votre critique ?');">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('delete_review_' ~ review.id) }}">
+                                            <button class="btn btn-sm review-delete-button" type="submit"><i class="bi bi-trash"></i> Supprimer</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
     </div>
 {% endblock %}

@@ -2,6 +2,7 @@
 
 namespace App\Controller\Front;
 
+use App\Controller\CsrfProtectedControllerTrait;
 use App\Entity\Movie;
 use App\Entity\Review;
 use App\Entity\User;
@@ -18,13 +19,14 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 class ReviewController extends AbstractController
 {
+    use CsrfProtectedControllerTrait;
 
     /**
      * Ajout ou modification de la critique de l'utilisateur connecté pour ce film
      *
      * @link https://symfony.com/doc/current/best_practices.html#use-a-single-action-to-render-and-process-the-form
      */
-    #[Route('/movie/{id}/review', name: 'movie_review_add', methods: ['GET', 'POST'])]
+    #[Route('/movie/{slug}/review', name: 'movie_review_add', methods: ['GET', 'POST'])]
     #[IsGranted('ROLE_USER')]
     public function show(Movie $movie, Request $request, EntityManagerInterface $doctrine, ReviewRepository $reviewRepository, #[CurrentUser] User $user)
     {
@@ -38,16 +40,16 @@ class ReviewController extends AbstractController
         if (!$isEditing) {
             $review->setWatchedAt(new DateTimeImmutable());
         }
-        $formulaire = $this->createForm(ReviewType::class, $review);
+        $form = $this->createForm(ReviewType::class, $review);
 
         // on dit au formulaire de prendre en compte la requete HTTP
         // et donc de relier les données envoyé par le formulaire
         // à la variable que nous lui avons fournit à la création du formulaire
         // $review
-        $formulaire->handleRequest($request);
+        $form->handleRequest($request);
 
         // si le formulaire est renvoyé ET qu'il est valide
-        if ($formulaire->isSubmitted() && $formulaire->isValid()) {
+        if ($form->isSubmitted() && $form->isValid()) {
 
             // comme la on a commenté movie dans notre formulaire
             // il faut maintenant faire la liaison
@@ -63,7 +65,7 @@ class ReviewController extends AbstractController
 
         return $this->render('front/review/index.html.twig', [
             'movie' => $movie,
-            'formulaire' => $formulaire->createView(),
+            'form' => $form->createView(),
             'isEditing' => $isEditing,
             'review' => $review,
         ]);
@@ -72,7 +74,7 @@ class ReviewController extends AbstractController
     /**
      * Suppression de la critique de l'utilisateur connecté pour ce film
      */
-    #[Route('/movie/{id}/review/delete', name: 'movie_review_delete', methods: ['POST'])]
+    #[Route('/movie/{slug}/review/delete', name: 'movie_review_delete', methods: ['POST'])]
     #[IsGranted('ROLE_USER')]
     public function delete(Movie $movie, Request $request, EntityManagerInterface $doctrine, ReviewRepository $reviewRepository, #[CurrentUser] User $user): Response
     {
@@ -82,9 +84,7 @@ class ReviewController extends AbstractController
             throw $this->createNotFoundException();
         }
 
-        if (!$this->isCsrfTokenValid('delete_review_' . $review->getId(), (string) $request->request->get('_token'))) {
-            throw $this->createAccessDeniedException('Jeton CSRF invalide.');
-        }
+        $this->assertCsrfTokenValid('delete_review_' . $review->getId(), $request);
 
         $doctrine->remove($review);
         $doctrine->flush();

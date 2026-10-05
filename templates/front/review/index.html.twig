@@ -11,7 +11,7 @@
             <span class="stream-kicker">Votre avis compte</span>
             <h1>Racontez-nous votre séance.</h1>
             <div class="review-context__poster movie__poster" style="background-image: url('{{ movie.poster|e('html_attr') }}');">
-                <img src="{{ asset('assets/images/poster-placeholder.png') }}" alt="Affiche de {{ movie.title }}">
+                <img src="{{ movie.poster }}" alt="Affiche de {{ movie.title }}" loading="lazy">
             </div>
             <h2>{{ movie.title }}</h2>
             <p>Votre critique aidera les autres membres à choisir leur prochaine histoire.</p>
@@ -24,20 +24,20 @@
                 <p>Les champs marqués sont nécessaires pour publier votre avis.</p>
             </div>
 
-            {{ form_start(formulaire, {attr: {class: 'review-form', novalidate: 'novalidate'}}) }}
-                {{ form_errors(formulaire) }}
+            {{ form_start(form, {attr: {class: 'review-form', novalidate: 'novalidate'}}) }}
+                {{ form_errors(form) }}
                 <p class="review-form__identity"><i class="bi bi-person-check"></i> Avis publié avec le compte <strong>{{ app.user.displayName }}</strong></p>
-                {{ form_row(formulaire.rating) }}
-                {{ form_row(formulaire.content, {attr: {rows: 7, placeholder: 'Qu’avez-vous pensé de ce film ou de cette série ?'}}) }}
-                {{ form_row(formulaire.reactions) }}
-                {{ form_row(formulaire.watchedAt) }}
+                {{ form_row(form.rating) }}
+                {{ form_row(form.content, {attr: {rows: 7, placeholder: 'Qu’avez-vous pensé de ce film ou de cette série ?'}}) }}
+                {{ form_row(form.reactions) }}
+                {{ form_row(form.watchedAt) }}
                 <button class="btn btn-danger review-form__submit" type="submit"><i class="bi bi-send"></i> {{ isEditing ? 'Mettre à jour ma critique' : 'Publier ma critique' }}</button>
-            {{ form_end(formulaire) }}
+            {{ form_end(form) }}
 
             {% if isEditing %}
-                <form method="post" action="{{ path('movie_review_delete', {id: movie.id}) }}" class="mt-2" onsubmit="return confirm('Supprimer définitivement votre critique ?');">
+                <form method="post" action="{{ path('movie_review_delete', {slug: movie.slug}) }}" class="mt-2" onsubmit="return confirm('Supprimer définitivement votre critique ?');">
                     <input type="hidden" name="_token" value="{{ csrf_token('delete_review_' ~ review.id) }}">
-                    <button class="btn btn-outline-danger btn-sm" type="submit"><i class="bi bi-trash"></i> Supprimer ma critique</button>
+                    <button class="btn btn-sm review-delete-button" type="submit"><i class="bi bi-trash"></i> Supprimer ma critique</button>
                 </form>
             {% endif %}
         </div>

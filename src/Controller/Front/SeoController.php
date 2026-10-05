@@ -49,7 +49,7 @@ class SeoController extends AbstractController
         }
 
         foreach ($genreRepository->findAll() as $genre) {
-            $xml->addChild('url')->addChild('loc', htmlspecialchars($this->generateUrl('genre', ['id' => $genre->getId()], UrlGeneratorInterface::ABSOLUTE_URL)));
+            $xml->addChild('url')->addChild('loc', htmlspecialchars($this->generateUrl('genre', ['slug' => $genre->getSlug()], UrlGeneratorInterface::ABSOLUTE_URL)));
         }
 
         return new Response($xml->asXML(), Response::HTTP_OK, ['Content-Type' => 'application/xml']);

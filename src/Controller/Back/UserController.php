@@ -2,6 +2,7 @@
 
 namespace App\Controller\Back;
 
+use App\Controller\CsrfProtectedControllerTrait;
 use App\Entity\User;
 use App\Form\UserType;
 use App\Repository\UserRepository;
@@ -15,6 +16,8 @@ use Symfony\Component\Routing\Annotation\Route;
 #[Route('/back/user')]
 class UserController extends AbstractController
 {
+    use CsrfProtectedControllerTrait;
+
     #[Route('/', name: 'back_user_index', methods: ['GET'])]
     public function index(UserRepository $userRepository): Response
     {
@@ -85,10 +88,10 @@ class UserController extends AbstractController
     #[Route('/{id}', name: 'back_user_delete', methods: ['POST'])]
     public function delete(Request $request, User $user, EntityManagerInterface $entityManager): Response
     {
-        if ($this->isCsrfTokenValid('delete' . $user->getId(), $request->request->get('_token'))) {
-            $entityManager->remove($user);
-            $entityManager->flush();
-        }
+        $this->assertCsrfTokenValid('delete' . $user->getId(), $request);
+
+        $entityManager->remove($user);
+        $entityManager->flush();
 
         return $this->redirectToRoute('back_user_index', [], Response::HTTP_SEE_OTHER);
     }

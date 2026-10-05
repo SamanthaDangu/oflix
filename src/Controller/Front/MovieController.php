@@ -2,6 +2,7 @@
 
 namespace App\Controller\Front;
 
+use App\Controller\CsrfProtectedControllerTrait;
 use App\Entity\Movie;
 use App\Entity\User;
 use App\Repository\CastingRepository;
@@ -17,6 +18,8 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 class MovieController extends AbstractController
 {
+    use CsrfProtectedControllerTrait;
+
     /**
      * Affiche la fiche d'un film ou d'une serie avec les critiques associees.
      *
@@ -56,8 +59,8 @@ class MovieController extends AbstractController
                 'movies' => [],
                 'heroMovie' => $featuredMovies[0] ?? null,
                 'featuredMovies' => $featuredMovies,
-                'films' => $repository->findByType('Film'),
-                'series' => $repository->findByType('Série'),
+                'films' => $repository->findByType('Movie'),
+                'series' => $repository->findByType('Series'),
                 'isHome' => true,
                 'pageTitle' => null,
                 'searchQuery' => '',
@@ -89,7 +92,7 @@ class MovieController extends AbstractController
     public function showByType(MovieRepository $repository, Request $request): Response
     {
         $isFilmsPage = $request->attributes->get('_route') === 'films';
-        $type = $isFilmsPage ? 'Film' : 'Série';
+        $type = $isFilmsPage ? 'Movie' : 'Series';
 
         return $this->render('front/movie/list.html.twig', [
             'movies' => $repository->findByType($type),
@@ -107,9 +110,7 @@ class MovieController extends AbstractController
     #[IsGranted('ROLE_USER')]
     public function addFavorite(Movie $movie, Request $request, EntityManagerInterface $entityManager, #[CurrentUser] User $user): Response
     {
-        if (!$this->isCsrfTokenValid('favorite_' . $movie->getId(), (string) $request->request->get('_token'))) {
-            throw $this->createAccessDeniedException('Jeton CSRF invalide.');
-        }
+        $this->assertCsrfTokenValid('favorite_' . $movie->getId(), $request);
 
         $user->addFavoriteMovie($movie);
         $entityManager->flush();
@@ -122,9 +123,7 @@ class MovieController extends AbstractController
     #[IsGranted('ROLE_USER')]
     public function removeFavorite(Movie $movie, Request $request, EntityManagerInterface $entityManager, #[CurrentUser] User $user): Response
     {
-        if (!$this->isCsrfTokenValid('favorite_' . $movie->getId(), (string) $request->request->get('_token'))) {
-            throw $this->createAccessDeniedException('Jeton CSRF invalide.');
-        }
+        $this->assertCsrfTokenValid('favorite_' . $movie->getId(), $request);
 
         $user->removeFavoriteMovie($movie);
         $entityManager->flush();

@@ -22,7 +22,7 @@ class ApiController extends AbstractController
     /**
      * Liste les films disponibles pour l'API publique.
      */
-    #[Route('/api/movies', name: 'api_list_movies', methods: ['GET'])]
+    #[Route('/api/movies', name: 'api_movies_list', methods: ['GET'])]
     public function listMovies(MovieRepository $movieRepository): Response
     {
         return $this->json(
@@ -36,7 +36,7 @@ class ApiController extends AbstractController
     /**
      * Liste les genres disponibles pour l'API publique.
      */
-    #[Route('/api/genres', name: 'api_list_genres', methods: ['GET'])]
+    #[Route('/api/genres', name: 'api_genres_list', methods: ['GET'])]
     public function listGenres(GenreRepository $genreRepository): Response
     {
         return $this->json(
@@ -47,7 +47,7 @@ class ApiController extends AbstractController
         );
     }
 
-    #[Route('/api/genres/{id}', name: 'api_genre', methods: ['GET'])]
+    #[Route('/api/genres/{id}', name: 'api_genres_show', methods: ['GET'])]
     public function showGenre(?Genre $genre = null): Response
     {
         if ($genre === null) {
@@ -66,7 +66,7 @@ class ApiController extends AbstractController
     /**
      * Liste les films associes a un genre.
      */
-    #[Route('/api/genres/{id}/movies', name: 'api_genre_movies', methods: ['GET'])]
+    #[Route('/api/genres/{id}/movies', name: 'api_genres_movies', methods: ['GET'])]
     public function showMoviesFromGenre(?Genre $genre = null): Response
     {
         if ($genre === null) {
@@ -87,7 +87,7 @@ class ApiController extends AbstractController
      *
      * @link https://symfony.com/doc/current/validation.html#using-the-validator-service
      */
-    #[Route('/api/movies', name: 'api_movies_create', methods: ['POST'])]
+    #[Route('/api/secure/movies', name: 'api_secure_movies_create', methods: ['POST'])]
     public function createMovie(EntityManagerInterface $doctrine, Request $request, SerializerInterface $serializer, ValidatorInterface $validator): Response
     {
         $data = $request->getContent();
@@ -124,12 +124,16 @@ class ApiController extends AbstractController
      *
      * @link https://symfony.com/doc/current/validation.html#using-the-validator-service
      */
-    #[Route('/api/secure/genres', name: 'api_genres_create', methods: ['POST'])]
+    #[Route('/api/secure/genres', name: 'api_secure_genres_create', methods: ['POST'])]
     public function createGenre(EntityManagerInterface $doctrine, Request $request, SerializerInterface $serializer, ValidatorInterface $validator): Response
     {
         $data = $request->getContent();
         try {
-            $newgenre =  $serializer->deserialize($data, Genre::class, 'json');
+            // slug gere en interne (GenreListener) : on l'ignore pour eviter
+            // qu'un appelant ne l'impose directement via l'API
+            $newgenre =  $serializer->deserialize($data, Genre::class, 'json', [
+                'ignored_attributes' => ['slug'],
+            ]);
         } catch (Exception $e) {
 
             return new JsonResponse("Hoouuu !! Ce qui vient d'arriver est de votre faute : JSON invalide", Response::HTTP_UNPROCESSABLE_ENTITY);

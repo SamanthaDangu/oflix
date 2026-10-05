@@ -1,4 +1,6 @@
 {% extends "base.html.twig" %}
+{% import 'front/_stars.html.twig' as stars %}
+{% import 'front/_review_card.html.twig' as reviewCard %}
 
 {% block title %}O'flix - {{ movie.title }}{% endblock %}
 {% block meta_description %}{{ movie.summary|striptags|slice(0, 155) }}{% endblock %}
@@ -20,8 +22,10 @@
         'image': movie.poster,
         'description': movie.summary|striptags,
         'genre': genreNames,
-        'duration': 'PT' ~ movie.duration ~ 'M',
     } %}
+    {% if movie.duration %}
+        {% set jsonLd = jsonLd|merge({'duration': 'PT' ~ movie.duration ~ 'M'}) %}
+    {% endif %}
     {% if movie.releaseDate %}
         {% set jsonLd = jsonLd|merge({'dateCreated': movie.releaseDate|date('Y-m-d')}) %}
     {% endif %}
@@ -64,22 +68,31 @@
                         {% else %}
                             <a href="{{ path('app_login') }}" class="movie__favorite" aria-label="Connectez-vous pour ajouter {{ movie.title }} à ma liste"><i class="bi bi-bookmark-plus"></i></a>
                         {% endif %}
-                        <span class="movie-card__type mb-2">{{ movie.type }}</span>
+                        <span class="movie-card__type mb-2">{{ movie.type|movieTypeLabel }}</span>
                         <h1 class="mb-2">{{ movie.title }}</h1>
-                        <div class="movie-card__meta mb-3">{{ movie.duration }} min</div>
+                        <div class="movie-card__meta mb-3">{{ movie.duration ? movie.duration ~ ' min' : 'Durée non communiquée' }}</div>
                         <p>
                             {% for genre in movie.genres %}
-                                <span class="badge bg-warning text-dark">{{ genre.name }}</span>
+                                <a href="{{ path('genre', {slug: genre.slug}) }}" class="badge bg-warning text-dark text-decoration-none">{{ genre.name }}</a>
                             {% endfor %}
                         </p>
                         <p>{{ movie.summary }}</p>
-                        <div class="d-flex rating">
-                        {% for i in range(0, 4) %}
-                            {% set starClass = movie.rating - i >= 1 ? '-fill' : (movie.rating - i >= 0.5 ? '-half' : '') %}
-                            <span class="bi bi-star{{ starClass }}"></span>
-                        {% endfor %}
-                            <span class="ps-1">{{ movie.rating }}</span>
-                        </div>
+                        {% if movie.platforms|length > 0 %}
+                            <div class="mb-3">
+                                <span class="movie-card__meta d-block mb-2">Disponible sur</span>
+                                <div class="d-flex flex-wrap gap-2">
+                                    {% for platform in movie.platforms %}
+                                        <span class="platform-badge d-inline-flex align-items-center gap-1" title="{{ platform.name }}">
+                                            {% if platform.logo %}
+                                                <img src="{{ platform.logo }}" alt="" width="20" height="20" class="rounded">
+                                            {% endif %}
+                                            {{ platform.name }}
+                                        </span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endif %}
+                        {{ stars.rating(movie.rating) }}
 
                         <h2>{{ movie.seasons|length }} Saisons</h2>
                         <ul class="list-unstyled">
@@ -119,14 +132,14 @@
 
                 {% if userReview %}
                     <div class="d-flex gap-2 mb-2">
-                        <a class="btn btn-sm btn-outline-danger" href="{{ path('movie_review_add', {id: movie.id}) }}"><i class="bi bi-pencil"></i> Modifier ma critique</a>
-                        <form method="post" action="{{ path('movie_review_delete', {id: movie.id}) }}" onsubmit="return confirm('Supprimer définitivement votre critique ?');">
+                        <a class="btn btn-sm btn-outline-danger" href="{{ path('movie_review_add', {slug: movie.slug}) }}"><i class="bi bi-pencil"></i> Modifier ma critique</a>
+                        <form method="post" action="{{ path('movie_review_delete', {slug: movie.slug}) }}" onsubmit="return confirm('Supprimer définitivement votre critique ?');">
                             <input type="hidden" name="_token" value="{{ csrf_token('delete_review_' ~ userReview.id) }}">
-                            <button class="btn btn-sm btn-outline-secondary" type="submit"><i class="bi bi-trash"></i> Supprimer</button>
+                            <button class="btn btn-sm review-delete-button" type="submit"><i class="bi bi-trash"></i> Supprimer</button>
                         </form>
                     </div>
                 {% else %}
-                    <p><a class="btn btn-sm btn-danger" href="{{ path('movie_review_add', {id: movie.id}) }}">Ajouter une critique</a></p>
+                    <p><a class="btn btn-sm btn-danger" href="{{ path('movie_review_add', {slug: movie.slug}) }}">Ajouter une critique</a></p>
                 {% endif %}
 
                 {% if reviews is empty %}
@@ -139,23 +152,9 @@
                     <div class="row g-3">
                         {% for review in reviews %}
                             <div class="col-12 col-md-6">
-                                <div class="card border-0 h-100">
+                                <div class="card review-card border-0 h-100">
                                     <div class="card-body">
-                                        {% if review.rating > 0 %}
-                                            <div class="d-flex rating">
-                                                {% set k = review.rating %}
-                                                {% for i in range(1, review.rating|round(0, 'floor')) %}
-                                                    <i class="bi bi-star-fill"></i>
-                                                    {% set k = k - 1 %}
-                                                {% endfor %}
-                                                {% if k > 0 %}
-                                                    <i class="bi bi-star-half"></i>
-                                                {% endif %}
-                                                <span class="ps-1">{{ review.rating }}</span>
-                                            </div>
-                                        {% endif %}
-                                        <h6 class="card-subtitle my-2 text-muted">de {{ review.username }} vu le {{ review.watchedAt|date('d/m/y') }}</h6>
-                                        <p class="card-text">{{ review.content }}</p>
+                                        {{ reviewCard.body(review) }}
                                     </div>
                                 </div>
                             </div>

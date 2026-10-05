@@ -13,7 +13,7 @@ use Symfony\Component\Validator\Constraints\Regex;
 final class PasswordPolicy
 {
     public const MIN_LENGTH = 8;
-    public const COMPLEXITY_REGEX = '/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/';
+    public const COMPLEXITY_REGEX = '/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&+\-_#])/';
     public const COMPLEXITY_MESSAGE = 'Le mot de passe doit contenir une minuscule, une majuscule, un chiffre et un caractère spécial.';
     public const LENGTH_MESSAGE = 'Le mot de passe doit contenir au moins {{ limit }} caractères.';
 

@@ -21,6 +21,9 @@ security:
                 check_path: /api/login_check
                 success_handler: lexik_jwt_authentication.handler.authentication_success
                 failure_handler: lexik_jwt_authentication.handler.authentication_failure
+            # protege /api/login_check contre le bourrage de mots de passe, comme le firewall main
+            login_throttling:
+                max_attempts: 5
         
         # partie secure de l'API
         api_secure:
@@ -67,7 +70,7 @@ security:
         - { path: '^/register$', roles: PUBLIC_ACCESS }
         - { path: '^/favorites$', roles: ROLE_USER }
         - { path: '^/movie/[^/]+/favorite', roles: ROLE_USER }
-        - { path: '^/api/movies$', roles: ROLE_MANAGER, methods: [POST] }
+        - { path: '^/api/secure/movies$', roles: ROLE_MANAGER, methods: [POST] }
         - { path: '^/api/secure/genres$', roles: ROLE_MANAGER, methods: [POST] }
         - { path: '^/back/user/new$', roles: ROLE_ADMIN }
         - { path: '^/back/user/[^/]+/edit$', roles: ROLE_ADMIN }
@@ -83,7 +86,7 @@ security:
         - { path: '^/back/[^/]+/new$', roles: ROLE_ADMIN } # routes add de n'importe quel modèle
         - { path: '^/back/[^/]+/\d+$', roles: ROLE_MANAGER, methods: [GET] } # route de show de n'importe quel modèle
         - { path: '^/back/[^/]+/$', roles: ROLE_MANAGER } # route de liste de n'importe quel modèle
-        - { path: '^/movie/\d+/review', roles: ROLE_USER }
+        - { path: '^/movie/[^/]+/review', roles: ROLE_USER }
         - { path: '^/back/', roles: ROLE_MANAGER }
         - { path: '^/profile', roles: ROLE_USER }
         # ACL pour notre API

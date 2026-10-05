@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\User;
 use App\Form\ProfileType;
+use App\Repository\ReviewRepository;
 use App\Repository\UserRepository;
 use App\Security\PasswordPolicy;
 use Doctrine\ORM\EntityManagerInterface;
@@ -19,6 +20,8 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 class ProfileController extends AbstractController
 {
+    use CsrfProtectedControllerTrait;
+
     #[Route('/profile', name: 'app_profile', methods: ['GET', 'POST'])]
     #[IsGranted('ROLE_USER')]
     public function edit(
@@ -26,6 +29,7 @@ class ProfileController extends AbstractController
         UserPasswordHasherInterface $passwordHasher,
         EntityManagerInterface $entityManager,
         UserRepository $userRepository,
+        ReviewRepository $reviewRepository,
         #[CurrentUser] User $user
     ): Response {
         $form = $this->createForm(ProfileType::class, $user);
@@ -75,6 +79,7 @@ class ProfileController extends AbstractController
 
         return $this->render('security/profile.html.twig', [
             'profile_form' => $form->createView(),
+            'reviews' => $reviewRepository->findByUserOrderedByDate($user),
         ]);
     }
 
@@ -87,9 +92,7 @@ class ProfileController extends AbstractController
         TokenStorageInterface $tokenStorage,
         #[CurrentUser] User $user
     ): Response {
-        if (!$this->isCsrfTokenValid('delete_account_' . $user->getId(), (string) $request->request->get('_token'))) {
-            throw $this->createAccessDeniedException('Jeton CSRF invalide.');
-        }
+        $this->assertCsrfTokenValid('delete_account_' . $user->getId(), $request);
 
         if (!$passwordHasher->isPasswordValid($user, (string) $request->request->get('confirm_password'))) {
             $this->addFlash('error', 'Mot de passe incorrect. Votre compte n\'a pas été supprimé.');

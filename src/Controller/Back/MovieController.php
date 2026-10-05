@@ -2,6 +2,7 @@
 
 namespace App\Controller\Back;
 
+use App\Controller\CsrfProtectedControllerTrait;
 use App\Entity\Movie;
 use App\Form\MovieType;
 use App\Repository\MovieRepository;
@@ -14,6 +15,8 @@ use Symfony\Component\Routing\Annotation\Route;
 #[Route('/back/movie')]
 class MovieController extends AbstractController
 {
+    use CsrfProtectedControllerTrait;
+
     #[Route('/', name: 'back_movie_index', methods: ['GET'])]
     public function index(MovieRepository $movieRepository): Response
     {
@@ -57,10 +60,7 @@ class MovieController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $this->addFlash(
-                'notice-jb',
-                'Les modifications ont été bien sauvegardées!'
-            );
+            $this->addFlash('success', 'Les modifications ont été bien sauvegardées!');
 
             $entityManager->flush();
 
@@ -76,16 +76,10 @@ class MovieController extends AbstractController
     #[Route('/{id}', name: 'back_movie_delete', methods: ['POST'])]
     public function delete(Request $request, Movie $movie, EntityManagerInterface $entityManager): Response
     {
+        $this->assertCsrfTokenValid('delete' . $movie->getId(), $request);
 
-        if ($this->isCsrfTokenValid('delete' . $movie->getId(), $request->request->get('_token'))) {
-            $entityManager->remove($movie);
-            $entityManager->flush();
-        } else {
-            $this->addFlash(
-                'error',
-                'Petit chenapan, ton token n\'est pas valide!'
-            );
-        }
+        $entityManager->remove($movie);
+        $entityManager->flush();
 
         return $this->redirectToRoute('back_movie_index', [], Response::HTTP_SEE_OTHER);
     }

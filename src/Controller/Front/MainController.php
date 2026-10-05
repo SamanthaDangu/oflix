@@ -2,6 +2,7 @@
 
 namespace App\Controller\Front;
 
+use App\Controller\CsrfProtectedControllerTrait;
 use App\Entity\User;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -14,6 +15,8 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[Route(name: 'main_')]
 class MainController extends AbstractController
 {
+    use CsrfProtectedControllerTrait;
+
     /**
      * Affiche les films et series ajoutes a la liste de l'utilisateur connecte.
      */
@@ -32,9 +35,7 @@ class MainController extends AbstractController
     #[Route('/theme/toggle', name: 'theme_switcher', methods: ['POST'])]
     public function themeSwitcher(SessionInterface $session, Request $request): Response
     {
-        if (!$this->isCsrfTokenValid('theme_switcher', (string) $request->request->get('_token'))) {
-            throw $this->createAccessDeniedException('Jeton CSRF invalide.');
-        }
+        $this->assertCsrfTokenValid('theme_switcher', $request);
 
         $theme = $session->get('theme', 'netflix');
 

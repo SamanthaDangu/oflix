@@ -2,6 +2,7 @@
 
 namespace App\Controller\Back;
 
+use App\Controller\CsrfProtectedControllerTrait;
 use App\Entity\Casting;
 use App\Entity\Movie;
 use App\Form\CastingType;
@@ -18,6 +19,8 @@ use Symfony\Component\Routing\Annotation\Route;
 #[Route('/back/casting')]
 class CastingController extends AbstractController
 {
+    use CsrfProtectedControllerTrait;
+
     #[Route('/', name: 'back_casting_index', methods: ['GET'])]
     public function index(CastingRepository $castingRepository): Response
     {
@@ -95,10 +98,10 @@ class CastingController extends AbstractController
     #[Route('/{id}', name: 'back_casting_delete', methods: ['POST'])]
     public function delete(Request $request, Casting $casting, EntityManagerInterface $entityManager): Response
     {
-        if ($this->isCsrfTokenValid('delete' . $casting->getId(), $request->request->get('_token'))) {
-            $entityManager->remove($casting);
-            $entityManager->flush();
-        }
+        $this->assertCsrfTokenValid('delete' . $casting->getId(), $request);
+
+        $entityManager->remove($casting);
+        $entityManager->flush();
 
         return $this->redirectToRoute('back_casting_index', [], Response::HTTP_SEE_OTHER);
     }
