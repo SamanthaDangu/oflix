@@ -54,4 +54,18 @@ services:
                 # method attribute is optional
                 method: updateSlug
 
+    # paramétrage de GenreListener (même principe que MovieListener, pour le slug des genres)
+    App\EventListener\GenreListener:
+        tags:
+            -
+                name: doctrine.orm.entity_listener
+                event: preUpdate
+                entity: App\Entity\Genre
+                method: updateSlug
+            -
+                name: doctrine.orm.entity_listener
+                event: prePersist
+                entity: App\Entity\Genre
+                method: updateSlug
+
 

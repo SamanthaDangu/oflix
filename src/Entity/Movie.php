@@ -13,6 +13,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\Entity(repositoryClass: MovieRepository::class)]
 #[ORM\HasLifecycleCallbacks]
 #[ORM\Index(columns: ['tmdb_id', 'type'], name: 'idx_movie_tmdb_id_type')]
+#[ORM\UniqueConstraint(name: 'uniq_movie_slug', columns: ['slug'])]
 class Movie
 {
     #[ORM\Id]
@@ -23,6 +24,8 @@ class Movie
 
     #[ORM\Column(type: 'string', length: 255)]
     #[Groups(['list_movie', 'list_genre', 'show_genre', 'show_movie'])]
+    #[Assert\NotBlank]
+    #[Assert\Length(max: 255)]
     private $title;
 
     #[ORM\Column(type: 'date')]
@@ -40,9 +43,13 @@ class Movie
     private $type;
 
     #[ORM\Column(type: 'text')]
+    #[Assert\NotBlank]
+    #[Assert\Length(max: 2000)]
     private $synopsis;
 
     #[ORM\Column(type: 'text')]
+    #[Assert\NotBlank]
+    #[Assert\Length(max: 500)]
     private $summary;
 
     #[ORM\Column(type: 'float', nullable: true)]
@@ -51,6 +58,8 @@ class Movie
 
     #[ORM\Column(type: 'text')]
     #[Groups(['list_movie', 'show_genre'])]
+    #[Assert\NotBlank]
+    #[Assert\Url(message: 'Le poster doit être une URL valide.')]
     private $poster;
 
     /**
@@ -68,6 +77,10 @@ class Movie
     #[Groups(['list_movie'])]
     #[Assert\Count(min: 1)]
     private $genres;
+
+    #[ORM\ManyToMany(targetEntity: Platform::class, inversedBy: 'movies')]
+    #[Groups(['show_movie'])]
+    private $platforms;
 
     #[ORM\OneToMany(targetEntity: Casting::class, mappedBy: 'movie', cascade: ['remove'])]
     private $castings;
@@ -91,6 +104,7 @@ class Movie
         $this->reviews = new ArrayCollection();
         $this->genres = new ArrayCollection();
         $this->castings = new ArrayCollection();
+        $this->platforms = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -267,6 +281,30 @@ class Movie
     }
 
     /**
+     * @return Collection|Platform[]
+     */
+    public function getPlatforms(): Collection
+    {
+        return $this->platforms;
+    }
+
+    public function addPlatform(Platform $platform): self
+    {
+        if (!$this->platforms->contains($platform)) {
+            $this->platforms[] = $platform;
+        }
+
+        return $this;
+    }
+
+    public function removePlatform(Platform $platform): self
+    {
+        $this->platforms->removeElement($platform);
+
+        return $this;
+    }
+
+    /**
      * @return Collection|Casting[]
      */
     public function getCastings(): Collection
@@ -306,11 +344,6 @@ class Movie
         $this->releaseDate = $releaseDate;
 
         return $this;
-    }
-
-    public function getSomethingForCastingForm()
-    {
-        return $this->title . ' (' . $this->duration . ' min.)';
     }
 
     public function getSlug(): ?string

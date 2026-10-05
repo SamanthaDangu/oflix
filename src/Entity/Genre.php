@@ -10,6 +10,8 @@ use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: GenreRepository::class)]
+#[ORM\UniqueConstraint(name: 'uniq_genre_name', columns: ['name'])]
+#[ORM\UniqueConstraint(name: 'uniq_genre_slug', columns: ['slug'])]
 class Genre
 {
     #[ORM\Id]
@@ -21,11 +23,15 @@ class Genre
     #[ORM\Column(type: 'string', length: 50)]
     #[Groups(['list_genre', 'list_movie', 'show_genre'])]
     #[Assert\Length(min: 5, max: 50, minMessage: 'Your genre name must be at least {{ limit }} characters long', maxMessage: 'Your genre name cannot be longer than {{ limit }} characters')]
+    #[Assert\NotBlank]
     private $name;
 
     #[ORM\ManyToMany(targetEntity: Movie::class, mappedBy: 'genres')]
     #[Groups(['list_genre'])]
     private $movies;
+
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    private $slug;
 
     public function __construct()
     {
@@ -45,6 +51,18 @@ class Genre
     public function setName(string $name): self
     {
         $this->name = $name;
+
+        return $this;
+    }
+
+    public function getSlug(): ?string
+    {
+        return $this->slug;
+    }
+
+    public function setSlug(?string $slug): self
+    {
+        $this->slug = $slug;
 
         return $this;
     }

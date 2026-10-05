@@ -18,4 +18,20 @@ class GenreRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, Genre::class);
     }
+
+    /**
+     * Genres tries par nom, avec leurs movies pre-chargees (evite le N+1
+     * quand le template affiche le nombre de films par genre).
+     *
+     * @return Genre[]
+     */
+    public function findAllWithMovies(): array
+    {
+        return $this->createQueryBuilder('genre')
+            ->addSelect('movie')
+            ->leftJoin('genre.movies', 'movie')
+            ->orderBy('genre.name', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
 }
